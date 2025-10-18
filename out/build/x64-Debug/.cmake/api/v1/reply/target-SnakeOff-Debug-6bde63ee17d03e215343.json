@@ -112,7 +112,9 @@
 				12,
 				13,
 				14,
-				15
+				15,
+				16,
+				17
 			]
 		}
 	],
@@ -184,7 +186,17 @@
 				12,
 				13,
 				14,
-				15
+				15,
+				16,
+				17
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				18,
+				19
 			]
 		}
 	],
@@ -247,6 +259,12 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
+			"path" : "src/states/HighScoresState.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
 			"path" : "src/states/MenuState.cpp",
 			"sourceGroupIndex" : 0
 		},
@@ -254,6 +272,12 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/states/PlayState.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/systems/HighScores.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -285,6 +309,16 @@
 			"compileGroupIndex" : 0,
 			"path" : "src/world/Level.cpp",
 			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/systems/HighScores.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/states/HighScoresState.h",
+			"sourceGroupIndex" : 1
 		}
 	],
 	"type" : "EXECUTABLE"
