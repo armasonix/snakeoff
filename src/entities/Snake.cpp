@@ -1,5 +1,5 @@
-#include "Snake.h"
-#include <lib/SFML/Graphics.hpp>
+#include "entities/Snake.h"
+#include <SFML/Graphics.hpp>
 
 Snake::Snake(const Vec2i& startCell) 
 {

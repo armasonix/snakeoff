@@ -1,6 +1,7 @@
-#include "MenuState.h"
+#include "states/MenuState.h"
 #include "states/PlayState.h"
-#include <lib/SFML/Graphics.hpp>
+#include "core/StateMachine.h" 
+#include <SFML/Graphics.hpp>
 
 MenuState::MenuState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
     : sm_(sm), win_(win), cfg_(cfg), res_(res) {}

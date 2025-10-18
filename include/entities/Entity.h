@@ -1,5 +1,5 @@
 #pragma once
-#include <lib/SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 
 struct IUpdatable 
 {

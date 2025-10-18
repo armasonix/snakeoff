@@ -1,9 +1,10 @@
-#include "PlayState.h"
+#include "states/PlayState.h"
 #include "systems/Spawner.h"
 #include "systems/Collision.h"
 #include "states/PauseState.h"
 #include "states/GameOverState.h"
-#include <lib/SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
+#include <functional>
 
 PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
     : sm_(sm), win_(win), cfg_(cfg), res_(res),

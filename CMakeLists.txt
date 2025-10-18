@@ -4,19 +4,66 @@ project(SnakeOff CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# root
+set(PROJ_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+
 # SFML
 find_package(SFML CONFIG REQUIRED COMPONENTS system window graphics audio)
 
+# collect src/**
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-    "src/*.cpp"
+    "${PROJ_ROOT}/src/*.cpp"
 )
+
+if (NOT SOURCES)
+  message(FATAL_ERROR "not found any .cpp in ${PROJ_ROOT}/src. Check project structure.")
+endif()
 
 add_executable(SnakeOff ${SOURCES})
 
-target_include_directories(SnakeOff PRIVATE include src)
+set(ALL_INC_DIRS
+    ${PROJ_ROOT}/include
+    ${PROJ_ROOT}/src
+)
 
-# SFML libs
+file(GLOB_RECURSE _INC_DIRS LIST_DIRECTORIES true "${PROJ_ROOT}/include/*")
+foreach(_p IN LISTS _INC_DIRS)
+  if (IS_DIRECTORY "${_p}")
+    list(APPEND ALL_INC_DIRS "${_p}")
+  endif()
+endforeach()
+
+file(GLOB_RECURSE _SRC_DIRS LIST_DIRECTORIES true "${PROJ_ROOT}/src/*")
+foreach(_p IN LISTS _SRC_DIRS)
+  if (IS_DIRECTORY "${_p}")
+    list(APPEND ALL_INC_DIRS "${_p}")
+  endif()
+endforeach()
+
+list(REMOVE_DUPLICATES ALL_INC_DIRS)
+target_include_directories(SnakeOff PRIVATE ${PROJ_ROOT}/include)
+
+# link SFML
 target_link_libraries(SnakeOff PRIVATE sfml-system sfml-window sfml-graphics sfml-audio)
+
+set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
+set(DATA_DIR   "${CMAKE_SOURCE_DIR}/data")
+
+add_custom_command(TARGET SnakeOff POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "$<TARGET_FILE_DIR:SnakeOff>/assets"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${DATA_DIR}"   "$<TARGET_FILE_DIR:SnakeOff>/data"
+)
+
+get_filename_component(_sfml_prefix "${SFML_DIR}/../../.." ABSOLUTE)
+set(_sfml_bin "${_sfml_prefix}/bin")
+
+add_custom_command(TARGET SnakeOff POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "Copy SFML DLLs from: ${_sfml_bin}"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${_sfml_bin}" "$<TARGET_FILE_DIR:SnakeOff>"
+)
+
+set_property(TARGET SnakeOff PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:SnakeOff>")
+set_property(TARGET SnakeOff PROPERTY VS_DEBUGGER_ENVIRONMENT "PATH=$<TARGET_FILE_DIR:SnakeOff>;%PATH%")
 
 if (MSVC)
   target_compile_options(SnakeOff PRIVATE /W4 /permissive- /Zc:preprocessor)

@@ -1,4 +1,5 @@
-#include "Application.h"
+#include "core/Application.h"
+#include "states/IGameState.h"
 #include "states/MenuState.h"
 
 Application::Application(int wPx, int hPx)
@@ -27,14 +28,14 @@ void Application::run()
         while (win_.pollEvent(e)) 
         {
             if (e.type == sf::Event::Closed) win_.close();
-            if (auto* gs = dynamic_cast<class IGameState*>(sm_.top()))
+            if (auto* gs = dynamic_cast<IGameState*>(sm_.top()))
                 gs->handleEvent(e);
         }
         float dt = clock.restart().asSeconds();
-        if (auto* gs = dynamic_cast<class IGameState*>(sm_.top())) gs->update(dt);
+        if (auto* gs = dynamic_cast<IGameState*>(sm_.top())) gs->update(dt);
 
         win_.clear(sf::Color(15, 15, 18));
-        if (auto* gs = dynamic_cast<class IGameState*>(sm_.top())) gs->draw(win_);
+        if (auto* gs = dynamic_cast<IGameState*>(sm_.top())) gs->draw(win_);
         win_.display();
     }
 }

@@ -1,4 +1,4 @@
-#include "Config.h"
+#include "core/Config.h"
 DifficultyParams Config::paramsFor(Difficulty d) const 
 {
     switch (d) 

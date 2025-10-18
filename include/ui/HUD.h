@@ -1,5 +1,5 @@
 #pragma once
-#include <lib/SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include "systems/Score.h"
 
 class HUD 

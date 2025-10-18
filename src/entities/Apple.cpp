@@ -1,5 +1,5 @@
-#include "Apple.h"
-#include <lib/SFML/Graphics.hpp>
+#include "entities/Apple.h"
+#include <SFML/Graphics.hpp>
 
 void Apple::draw(sf::RenderTarget& rt) const 
 {

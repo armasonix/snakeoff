@@ -1,9 +1,9 @@
 #pragma once
 #include "entities/Entity.h"
 #include "util/Types.h"
-#include <lib/SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 
-class PlayContext;
+struct PlayContext;
 
 class Apple : public IRenderable 
 {

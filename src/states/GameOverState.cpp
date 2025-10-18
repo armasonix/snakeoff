@@ -1,7 +1,7 @@
-#include "GameOverState.h"
+#include "states/GameOverState.h"
 #include "states/PlayState.h"
 #include "states/MenuState.h"
-#include <lib/SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 
 void GameOverState::handleEvent(const sf::Event& e) 
 {

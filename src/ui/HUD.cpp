@@ -1,4 +1,4 @@
-#include "HUD.h"
+#include "ui/HUD.h"
 
 HUD::HUD(const sf::Font& font) { text_.setFont(font); text_.setCharacterSize(20); }
 

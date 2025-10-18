@@ -9,7 +9,14 @@
             "installRoot": "${projectDir}\\out\\install\\${name}",
             "cmakeCommandArgs": "",
             "buildCommandArgs": "",
-            "ctestCommandArgs": ""
+            "ctestCommandArgs": "",
+            "variables": [
+                {
+                    "name": "SFML_DIR",
+                    "value": "E:/SnakeOff/SnakeOff/lib/SFML/lib/cmake/SFML",
+                    "type": "PATH"
+                }
+            ]
         },
         {
             "name": "x64-Release",

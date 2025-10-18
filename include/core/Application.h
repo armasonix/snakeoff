@@ -1,5 +1,5 @@
 #pragma once
-#include <lib/SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include "core/StateMachine.h"
 #include "core/Config.h"
 #include "core/Resources.h"
