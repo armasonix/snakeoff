@@ -23,6 +23,7 @@ set(OLD_GLOB
   "E:/SnakeOff/SnakeOff/src/util/Random.cpp"
   "E:/SnakeOff/SnakeOff/src/vfx/CameraShake.cpp"
   "E:/SnakeOff/SnakeOff/src/world/Level.cpp"
+  "E:/SnakeOff/SnakeOff/src/world/ProcGen.cpp"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   message("-- GLOB mismatch!")
