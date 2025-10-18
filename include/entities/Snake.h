@@ -27,6 +27,8 @@ public:
 
     bool bitesItself() const; // suicide
 
+    void teleportHead(const Vec2i& cell);
+
 private:
     std::deque<Vec2i> body_;
     Direction dir_{ Direction::Right };

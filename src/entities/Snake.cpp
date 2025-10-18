@@ -34,6 +34,12 @@ void Snake::step()
     else body_.pop_back();
 }
 
+void Snake::teleportHead(const Vec2i& cell)
+{
+    if (body_.empty()) return;
+    body_[0] = cell;
+}
+
 void Snake::update(float dt) 
 {
     if (flashTimer_ > 0.f) flashTimer_ = std::max(0.f, flashTimer_ - dt);

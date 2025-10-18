@@ -46,7 +46,48 @@ void PlayState::onEnter()
     auto obstacles = ProcGen::generate(level_.cols(), level_.rows(), start, g, rng);
     level_.applyObstacles(obstacles);
 
+    spawnPortals(1);
     spawnApple();
+}
+
+void PlayState::spawnPortals(int pairs)
+{
+    portals_.clear();
+    static thread_local std::mt19937 rng{ std::random_device{}() };
+
+    for (int i = 0; i < pairs; ++i)
+    {
+        // Spawner::randomFreeCell(const Grid&, const Snake&)
+        Vec2i a = Spawner::randomFreeCell(level_.grid(), snake_);
+        Vec2i b = Spawner::randomFreeCell(level_.grid(), snake_);
+        int guard = 0;
+        auto eq = [](const Vec2i& u, const Vec2i& v) { return u.x == v.x && u.y == v.y; };
+        while ((eq(a, b) || level_.isBlocked(a.x, a.y) || level_.isBlocked(b.x, b.y)) && guard++ < 500)
+        {
+            a = Spawner::randomFreeCell(level_.grid(), snake_);
+            b = Spawner::randomFreeCell(level_.grid(), snake_);
+        }
+
+        PortalPair p;
+        p.a = a;
+        p.b = b;
+
+        static const sf::Color colors[] = { {120,200,255}, {255,160,80}, {180,255,120}, {220,120,255} };
+        p.color = colors[i % (int)std::size(colors)];
+
+        portals_.push_back(p);
+    }
+    portalLockCell_ = Vec2i(-9999, -9999);
+}
+
+bool PlayState::isPortalCell(const Vec2i& c, size_t* outPairIdx, bool* isA) const
+{
+    for (size_t i = 0; i < portals_.size(); ++i) 
+    {
+        if (portals_[i].a.x == c.x && portals_[i].a.y == c.y) { if (outPairIdx) *outPairIdx = i; if (isA) *isA = true;  return true; }
+        if (portals_[i].b.x == c.x && portals_[i].b.y == c.y) { if (outPairIdx) *outPairIdx = i; if (isA) *isA = false; return true; }
+    }
+    return false;
 }
 
 void PlayState::handleEvent(const sf::Event& e) 
@@ -102,6 +143,41 @@ void PlayState::update(float dt)
     {
         timeAcc_ -= step;
         snake_.step();
+
+        // portals
+        {
+            const Vec2i head = snake_.head();
+
+            const bool notLocked = (head.x != portalLockCell_.x) || (head.y != portalLockCell_.y);
+            if (notLocked) 
+            {
+                size_t pairIdx = 0; bool isA = false;
+                if (isPortalCell(head, &pairIdx, &isA)) 
+                {
+                    const Vec2i dst = isA ? portals_[pairIdx].b : portals_[pairIdx].a;
+
+                    auto snakeOccupies = [&](int x, int y) 
+                        {
+                        for (const auto& c : snake_.body()) if (c.x == x && c.y == y) return true;
+                        return false;
+                        };
+
+                    if (level_.isBlocked(dst.x, dst.y) || snakeOccupies(dst.x, dst.y)) 
+                    {
+                        die();
+                        return;
+                    }
+                    snake_.teleportHead(dst);
+                    portalLockCell_ = dst;
+                }
+            }
+            else 
+            {
+                const Vec2i h = snake_.head();
+                if (h.x != portalLockCell_.x || h.y != portalLockCell_.y)
+                    portalLockCell_ = Vec2i(-9999, -9999);
+            }
+        }
 
         // death
         if (Collision::headHitsWall(level_.grid(), snake_) || snake_.bitesItself()) 
@@ -167,12 +243,27 @@ void PlayState::draw(sf::RenderTarget& rt)
         }
     }
 
+    auto drawCellFilled = [&](const Vec2i& c, sf::Color col) 
+        {
+        sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
+        r.setPosition((float)c.x * CELL + 1.f, (float)c.y * CELL + 1.f);
+        r.setFillColor(col);
+        rt.draw(r);
+        };
+
+    for (const auto& p : portals_) 
+    {
+        // enter brighter
+        drawCellFilled(p.a, sf::Color(p.color.r, p.color.g, p.color.b, 220));
+        // exit darker
+        drawCellFilled(p.b, sf::Color(p.color.r / 2, p.color.g / 2, p.color.b / 2, 220));
+    }
+
     if (apple_) apple_->draw(rt);
     snake_.draw(rt);
 
     if (apple_) 
     {
-        const int CELL = cfg_.cellPx;
 
         const auto c = apple_->cell();
         const float px = static_cast<float>(c.x * CELL);
@@ -232,6 +323,16 @@ void PlayState::spawnApple()
 {
     // basic spawn
     apple_ = Spawner::spawnNormal(level_.grid(), snake_);
+
+    // avoid portals
+    int guard = 0;
+    if (apple_) 
+    {
+        while (isPortalCell(apple_->cell(), nullptr, nullptr) && guard++ < 64) 
+        {
+            apple_ = Spawner::spawnNormal(level_.grid(), snake_);
+        }
+    }
 
     // roll apple type by weights from Config
     auto rollKind = [&]() -> AppleKind

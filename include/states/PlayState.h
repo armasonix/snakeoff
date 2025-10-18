@@ -8,11 +8,14 @@
 #include "systems/Score.h"
 #include "ui/HUD.h"
 #include "vfx/CameraShake.h"
-
+#include "systems/Effects.h"
 #include <memory>
 #include <functional>
+#include "world/Portal.h"
 
 struct PlayContext;
+
+enum class AppleKind { Normal, Bonus, Poison, Confuse };
 
 class PlayState : public IGameState 
 {
@@ -47,8 +50,18 @@ private:
     float                   timeAcc_{ 0.f };
     float                   startDelay_{ 0.f };
 
+    Effects    effects_;
+    AppleKind  appleKind_{ AppleKind::Normal };
+    float      appleTTL_{ 0.f };
+
     void spawnApple();
     void die();
+
+    std::vector<PortalPair> portals_;
+    Vec2i portalLockCell_{ -9999, -9999 }; // cell-lock
+
+    void spawnPortals(int pairs = 1);
+    bool isPortalCell(const Vec2i& c, size_t* outPairIdx = nullptr, bool* isA = nullptr) const;
 };
 
 struct PlayContext 
