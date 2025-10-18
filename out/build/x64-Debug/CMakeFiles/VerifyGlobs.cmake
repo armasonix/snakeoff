@@ -14,13 +14,16 @@ set(OLD_GLOB
   "E:/SnakeOff/SnakeOff/src/entities/apples/NormalApple.cpp"
   "E:/SnakeOff/SnakeOff/src/main.cpp"
   "E:/SnakeOff/SnakeOff/src/states/GameOverState.cpp"
+  "E:/SnakeOff/SnakeOff/src/states/HighScoresState.cpp"
   "E:/SnakeOff/SnakeOff/src/states/MenuState.cpp"
   "E:/SnakeOff/SnakeOff/src/states/PlayState.cpp"
+  "E:/SnakeOff/SnakeOff/src/systems/HighScores.cpp"
   "E:/SnakeOff/SnakeOff/src/systems/Spawner.cpp"
   "E:/SnakeOff/SnakeOff/src/ui/HUD.cpp"
   "E:/SnakeOff/SnakeOff/src/util/Random.cpp"
   "E:/SnakeOff/SnakeOff/src/vfx/CameraShake.cpp"
   "E:/SnakeOff/SnakeOff/src/world/Level.cpp"
+  "E:/SnakeOff/SnakeOff/src/world/ProcGen.cpp"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   message("-- GLOB mismatch!")

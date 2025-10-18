@@ -3,6 +3,7 @@
 #include "systems/Collision.h"
 #include "states/PauseState.h"
 #include "states/GameOverState.h"
+#include "world/ProcGen.h"
 #include <SFML/Graphics.hpp>
 #include <functional>
 
@@ -18,10 +19,30 @@ PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resou
 
 void PlayState::onEnter() 
 {
-    score_.reset();
+    win_.setView(win_.getDefaultView());
+    level_.clear();
+    level_.buildBorders();
+
+    // center or snake init spawn cell
+    sf::Vector2i start{ level_.cols() / 2, level_.rows() / 2 };
+
+    // difficult params
+    ProcGenParams g;
+    switch (static_cast<int>(cfg_.difficulty))
+    {
+    case 1: g.maxPlacements = 12; g.maxSingles = 6;  g.minReachable = 0.75f; break;
+    case 2: g.maxPlacements = 16; g.maxSingles = 8;  g.minReachable = 0.70f; break;
+    case 3: g.maxPlacements = 20; g.maxSingles = 10; g.minReachable = 0.65f; break;
+    case 4: g.maxPlacements = 24; g.maxSingles = 12; g.minReachable = 0.60f; break;
+    case 5: g.maxPlacements = 28; g.maxSingles = 14; g.minReachable = 0.55f; break;
+    default: break;
+    }
+
+    static thread_local std::mt19937 rng{ std::random_device{}() };
+    auto obstacles = ProcGen::generate(level_.cols(), level_.rows(), start, g, rng);
+    level_.applyObstacles(obstacles);
+
     spawnApple();
-    startDelay_ = cfg_.startDelaySec; // start delay T
-    timeAcc_ = 0.f;
 }
 
 void PlayState::handleEvent(const sf::Event& e) 
@@ -71,32 +92,38 @@ void PlayState::update(float dt)
     }
 }
 
-void PlayState::draw(sf::RenderTarget& rt) 
+void PlayState::draw(sf::RenderTarget& rt)
 {
     const int CELL = cfg_.cellPx;
-    // camera shake
-    sf::View view = win_.getView();
-    view.move(shake_.offsetX(), shake_.offsetY());
-    win_.setView(view);
 
-    // draw walls
-    sf::RectangleShape rect({ (float)CELL - 1,(float)CELL - 1 });
-    for (int y = 0;y < level_.grid().h();++y)
+    // basic cam
+    sf::View base = win_.getDefaultView();
+
+    // shake a copy of base cam
+    sf::View shaken = base;
+    shaken.move(shake_.offsetX(), shake_.offsetY());
+    win_.setView(shaken);
+
+    // world render
+    sf::RectangleShape rect({ (float)CELL - 1, (float)CELL - 1 });
+    for (int y = 0; y < level_.grid().h(); ++y)
     {
-        for (int x = 0;x < level_.grid().w();++x) 
+        for (int x = 0; x < level_.grid().w(); ++x)
         {
-            if (level_.grid().get({ x,y }) == CellType::Wall) 
+            if (level_.grid().get({ x, y }) == CellType::Wall)
             {
-                rect.setPosition((float)x * CELL, (float)y * CELL);
+                rect.setPosition((float)(x * CELL), (float)(y * CELL));
                 rect.setFillColor(sf::Color(50, 50, 50));
                 rt.draw(rect);
             }
         }
     }
 
-    // draws
     if (apple_) apple_->draw(rt);
     snake_.draw(rt);
+
+    // returns base cam — HUD draws by coords
+    win_.setView(base);
     hud_.draw(rt, score_);
 }
 

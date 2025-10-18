@@ -12,7 +12,7 @@
 #include <memory>
 #include <functional>
 
-class PlayContext;
+struct PlayContext;
 
 class PlayState : public IGameState 
 {
