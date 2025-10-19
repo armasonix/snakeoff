@@ -1,4 +1,8 @@
 #include "core/Config.h"
+#include <fstream>
+#include <string>
+#include <sstream>
+
 DifficultyParams Config::paramsFor(Difficulty d) const 
 {
     switch (d) 
@@ -26,4 +30,31 @@ Config::Config()
     apple.poisonTTL = 8.0f;
     apple.confuseDuration = 4.0f;
     apple.confuseTTL = 8.0f;
+}
+
+bool Config::loadUserSettings(const std::string& path) 
+{
+    std::ifstream in(path);
+    if (!in) return false;
+    std::string line;
+    while (std::getline(in, line)) 
+    {
+        std::istringstream is(line);
+        std::string k, v;
+        if (std::getline(is, k, '=') && std::getline(is, v)) 
+        {
+            if (k == "sound") soundOn = (v == "1" || v == "true");
+            if (k == "music") musicOn = (v == "1" || v == "true");
+        }
+    }
+    return true;
+}
+
+bool Config::saveUserSettings(const std::string& path) const 
+{
+    std::ofstream out(path, std::ios::trunc);
+    if (!out) return false;
+    out << "sound=" << (soundOn ? "1" : "0") << "\n";
+    out << "music=" << (musicOn ? "1" : "0") << "\n";
+    return true;
 }

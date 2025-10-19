@@ -1,6 +1,7 @@
 #pragma once
 #include "util/Types.h"
 #include <unordered_map>
+#include <string>
 
 class Config 
 {
@@ -16,6 +17,9 @@ public:
 
     bool  soundOn = true;
     bool  musicOn = true;
+
+    bool loadUserSettings(const std::string& path);
+    bool saveUserSettings(const std::string& path) const;
 
     struct AppleParams 
     {

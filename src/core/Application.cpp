@@ -14,6 +14,11 @@ bool Application::init()
     const int H = cfg_.gridHeight * cfg_.cellPx;
     win_.setSize({ (unsigned)W,(unsigned)H });
     win_.setView(sf::View(sf::FloatRect(0, 0, (float)W, (float)H)));
+
+    cfg_.loadUserSettings("data/settings.cfg");
+    res_.setSoundEnabled(cfg_.soundOn);
+    res_.setMusicEnabled(cfg_.musicOn);
+
     return res_.load("assets");
 }
 

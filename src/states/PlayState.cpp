@@ -16,8 +16,8 @@ PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resou
     snake_({ cfg.gridWidth / 2, cfg.gridHeight / 2 }),
     hud_(res.font())
 {
-    sfxEat_.setBuffer(res_.sfxEat());
-    sfxDeath_.setBuffer(res_.sfxDeath());
+    res_.playSfx(sfxEat_);
+    res_.playSfx(sfxDeath_);
 }
 
 void PlayState::onEnter() 
@@ -47,6 +47,8 @@ void PlayState::onEnter()
     static thread_local std::mt19937 rng{ std::random_device{}() };
     auto obstacles = ProcGen::generate(level_.cols(), level_.rows(), start, g, rng);
     level_.applyObstacles(obstacles);
+
+    if (cfg_.musicOn) res_.playSessionMusic();
 
     spawnPortals(1);
     spawnApple();

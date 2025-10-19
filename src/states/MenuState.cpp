@@ -2,13 +2,17 @@
 #include "states/PlayState.h"
 #include "core/StateMachine.h" 
 #include <SFML/Graphics.hpp>
+#include "states/SettingsState.h"
 #include "states/DifficultyState.h"
 #include "states/HighScoresState.h"
 
 MenuState::MenuState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
     : sm_(sm), win_(win), cfg_(cfg), res_(res) {}
 
-void MenuState::onEnter() {}
+void MenuState::onEnter() 
+{
+    if (cfg_.musicOn) res_.playMenuMusic();
+}
 
 void MenuState::handleEvent(const sf::Event& e) 
 {
@@ -21,6 +25,7 @@ void MenuState::handleEvent(const sf::Event& e)
             if (selected_ == 0) startGame();
             else if (selected_ == 1) sm_.push(std::make_unique<DifficultyState>(sm_, win_, cfg_, res_)); // difficulty
             else if (selected_ == 2) sm_.push(std::make_unique<HighScoresState>(sm_, win_, cfg_, res_)); // highlights
+            else if (selected_ == 3) sm_.push(std::make_unique<SettingsState>(sm_, win_, cfg_, res_));   // settings
             else if (selected_ == 4) win_.close();
         }
     }

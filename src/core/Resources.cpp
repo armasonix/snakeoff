@@ -15,6 +15,20 @@ static bool ensureExists(const std::string& path, const char* kind)
     return true;
 }
 
+void Resources::setSoundEnabled(bool on) 
+{
+    soundOn_ = on;
+}
+
+void Resources::setMusicEnabled(bool on) 
+{
+    musicOn_ = on;
+    if (!musicOn_) 
+    {
+        music_.stop();
+    }
+}
+
 bool Resources::load(const std::string& assetsDir)
 {
     font_ = std::make_unique<sf::Font>();
@@ -58,4 +72,34 @@ bool Resources::load(const std::string& assetsDir)
             << "Check file formats/permissions and that the files are valid.\n";
     }
     return ok;
+}
+
+static bool tryPlayMusic(sf::Music& m, const std::string& path, bool loop = true, float vol = 50.f) 
+{
+    if (!m.openFromFile(path)) return false;
+    m.setLoop(loop);
+    m.setVolume(vol);
+    m.play();
+    return true;
+}
+
+void Resources::playMenuMusic() 
+{
+    if (!musicOn_) return;
+    tryPlayMusic(music_, "assets/music/mainMenu.ogg", true, 45.f);
+}
+
+void Resources::playSessionMusic() 
+{
+    if (!musicOn_) return;
+    tryPlayMusic(music_, "assets/music/theme.ogg", true, 45.f);
+}
+
+void Resources::stopMusic() { music_.stop(); }
+
+void Resources::playSfx(sf::Sound& s, float volume) 
+{
+    if (!soundOn_) return; // mute
+    s.setVolume(volume);
+    s.play();
 }
