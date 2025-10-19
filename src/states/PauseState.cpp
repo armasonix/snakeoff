@@ -11,6 +11,7 @@ PauseState::PauseState(StateMachine& sm, Resources& res)
 void PauseState::onEnter() 
 {
     showHelp_ = true;
+    res_.pauseMusic();
 }
 
 void PauseState::handleEvent(const sf::Event& e) 
@@ -21,6 +22,8 @@ void PauseState::handleEvent(const sf::Event& e)
         {
         case sf::Keyboard::P:
         case sf::Keyboard::Escape:
+            res_.resumeMusic();
+            return;
         case sf::Keyboard::Enter:
             sm_.pop();
             return;

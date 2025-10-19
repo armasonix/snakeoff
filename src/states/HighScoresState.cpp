@@ -4,6 +4,7 @@
 void HighScoresState::onEnter() 
 {
     hs_.load(path_);
+    res_.ensureMenuLoop();
 }
 
 void HighScoresState::handleEvent(const sf::Event& e) 

@@ -5,7 +5,10 @@
 SettingsState::SettingsState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
     : sm_(sm), win_(win), cfg_(cfg), res_(res) {}
 
-void SettingsState::onEnter() {}
+void SettingsState::onEnter() 
+{
+    res_.ensureMenuLoop();
+}
 
 void SettingsState::toggleCurrent() 
 {
@@ -18,7 +21,6 @@ void SettingsState::toggleCurrent()
     {
         cfg_.musicOn = !cfg_.musicOn;
         res_.setMusicEnabled(cfg_.musicOn);
-        if (cfg_.musicOn) res_.playMenuMusic();
     }
     cfg_.saveUserSettings("data/settings.cfg");
 }

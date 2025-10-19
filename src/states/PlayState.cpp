@@ -28,6 +28,7 @@ void PlayState::onEnter()
     appleTTL_ = 0.f;
     level_.clear();
     level_.buildBorders();
+    res_.ensureSessionLoop();
 
     // center or snake init spawn cell
     sf::Vector2i start{ level_.cols() / 2, level_.rows() / 2 };
@@ -47,8 +48,6 @@ void PlayState::onEnter()
     static thread_local std::mt19937 rng{ std::random_device{}() };
     auto obstacles = ProcGen::generate(level_.cols(), level_.rows(), start, g, rng);
     level_.applyObstacles(obstacles);
-
-    if (cfg_.musicOn) res_.playSessionMusic();
 
     spawnPortals(1);
     spawnApple();
@@ -442,6 +441,7 @@ void PlayState::die()
 {
     sfxDeath_.play();
     sm_.push(std::make_unique<GameOverState>(sm_, win_, cfg_, res_, score_.value()));
+    res_.switchToGameOver();
 }
 
 void PlayState::flashSnake() 

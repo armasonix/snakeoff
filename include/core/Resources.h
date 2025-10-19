@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 
+enum class MusicTrack { None, Menu, Session, GameOver };
+
 class Resources 
 {
 public:
@@ -19,9 +21,17 @@ public:
     bool soundEnabled() const { return soundOn_; }
     bool musicEnabled() const { return musicOn_; }
 
-    void playMenuMusic();
-    void playSessionMusic();
     void stopMusic();
+
+    void ensureMenuLoop(float vol = 45.f);
+    void ensureSessionLoop(float vol = 45.f);
+    void switchToGameOver(float vol = 45.f);
+
+    void pauseMusic();
+    void resumeMusic();
+
+    MusicTrack currentTrack() const { return currentTrack_; }
+    sf::SoundSource::Status musicStatus() const { return music_.getStatus(); }
 
     void playSfx(sf::Sound& s, float volume = 100.f);
 
@@ -32,4 +42,8 @@ private:
     bool soundOn_ = true;
     bool musicOn_ = true;
     sf::Music music_;
+    MusicTrack currentTrack_ = MusicTrack::None;
+    std::string currentPath_;
+
+    bool openAndPlay_(const std::string& path, bool loop, float vol, MusicTrack t);
 };

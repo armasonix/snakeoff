@@ -20,13 +20,78 @@ void Resources::setSoundEnabled(bool on)
     soundOn_ = on;
 }
 
-void Resources::setMusicEnabled(bool on) 
+void Resources::setMusicEnabled(bool on)
 {
     musicOn_ = on;
+    if (!on) 
+    {
+        if (music_.getStatus() == sf::Music::Playing) music_.pause();
+    }
+    else 
+    {
+        if (music_.getStatus() == sf::Music::Paused) music_.play();
+    }
+}
+
+bool Resources::openAndPlay_(const std::string& path, bool loop, float vol, MusicTrack t)
+{
     if (!musicOn_) 
     {
-        music_.stop();
+        currentTrack_ = t;
+        currentPath_ = path;
+        return true;
     }
+
+    if (music_.getStatus() == sf::Music::Playing && currentPath_ == path)
+        return true;
+
+    if (music_.getStatus() == sf::Music::Paused && currentPath_ == path) 
+    {
+        music_.play();
+        currentTrack_ = t;
+        return true;
+    }
+
+    music_.stop();
+    if (!music_.openFromFile(path))
+        return false;
+
+    music_.setLoop(loop);
+    music_.setVolume(vol);
+    music_.play();
+
+    currentTrack_ = t;
+    currentPath_ = path;
+    return true;
+}
+
+void Resources::ensureMenuLoop(float vol)
+{
+    openAndPlay_("assets/music/mainMenu.ogg", true, vol, MusicTrack::Menu);
+}
+
+void Resources::ensureSessionLoop(float vol)
+{
+    openAndPlay_("assets/music/theme.ogg", true, vol, MusicTrack::Session);
+}
+
+void Resources::switchToGameOver(float vol)
+{
+    music_.stop();
+    openAndPlay_("assets/music/game_over.wav", false, vol, MusicTrack::GameOver);
+}
+
+void Resources::pauseMusic()
+{
+    if (music_.getStatus() == sf::Music::Playing)
+        music_.pause();
+}
+
+void Resources::resumeMusic()
+{
+    if (!musicOn_) return;
+    if (music_.getStatus() == sf::Music::Paused)
+        music_.play();
 }
 
 bool Resources::load(const std::string& assetsDir)
@@ -72,27 +137,6 @@ bool Resources::load(const std::string& assetsDir)
             << "Check file formats/permissions and that the files are valid.\n";
     }
     return ok;
-}
-
-static bool tryPlayMusic(sf::Music& m, const std::string& path, bool loop = true, float vol = 50.f) 
-{
-    if (!m.openFromFile(path)) return false;
-    m.setLoop(loop);
-    m.setVolume(vol);
-    m.play();
-    return true;
-}
-
-void Resources::playMenuMusic() 
-{
-    if (!musicOn_) return;
-    tryPlayMusic(music_, "assets/music/mainMenu.ogg", true, 45.f);
-}
-
-void Resources::playSessionMusic() 
-{
-    if (!musicOn_) return;
-    tryPlayMusic(music_, "assets/music/theme.ogg", true, 45.f);
 }
 
 void Resources::stopMusic() { music_.stop(); }

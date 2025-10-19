@@ -9,9 +9,9 @@
 MenuState::MenuState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
     : sm_(sm), win_(win), cfg_(cfg), res_(res) {}
 
-void MenuState::onEnter() 
+void MenuState::onEnter()
 {
-    if (cfg_.musicOn) res_.playMenuMusic();
+    res_.ensureMenuLoop();
 }
 
 void MenuState::handleEvent(const sf::Event& e) 

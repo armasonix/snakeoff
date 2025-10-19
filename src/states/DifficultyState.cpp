@@ -26,6 +26,7 @@ int DifficultyState::indexFromDifficulty(Difficulty d) const
 void DifficultyState::onEnter()
 {
     selected_ = indexFromDifficulty(cfg_.difficulty);
+    res_.ensureMenuLoop();
 }
 
 void DifficultyState::handleEvent(const sf::Event& e)
