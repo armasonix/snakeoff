@@ -49,6 +49,11 @@ private:
     sf::Sound               sfxEat_, sfxDeath_;
     float                   timeAcc_{ 0.f };
     float                   startDelay_{ 0.f };
+    float                   portalPulseT_ = 0.f;
+
+    // rgb colorout
+    float confuseVisT_ = 0.f;
+    float confuseHueT_ = 0.f;
 
     Effects    effects_;
     AppleKind  appleKind_{ AppleKind::Normal };

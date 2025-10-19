@@ -1,6 +1,6 @@
 # SnakeOff (C++20, SFML 2.6, CMake)
 
-Змейка
+SnakeOff
 
 ## Build
 - cmake -S . -B build -A x64 -DSFML_DIR="E:/SnakeOff/SnakeOff/lib/SFML/lib/cmake/SFML"

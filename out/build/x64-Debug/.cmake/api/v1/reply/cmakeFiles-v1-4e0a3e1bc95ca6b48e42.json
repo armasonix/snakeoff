@@ -16,6 +16,7 @@
 				"E:/SnakeOff/SnakeOff/src/states/GameOverState.cpp",
 				"E:/SnakeOff/SnakeOff/src/states/HighScoresState.cpp",
 				"E:/SnakeOff/SnakeOff/src/states/MenuState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/PauseState.cpp",
 				"E:/SnakeOff/SnakeOff/src/states/PlayState.cpp",
 				"E:/SnakeOff/SnakeOff/src/systems/HighScores.cpp",
 				"E:/SnakeOff/SnakeOff/src/systems/Spawner.cpp",

@@ -23,5 +23,7 @@ Config::Config()
     apple.bonusTTL = 6.0f;
     apple.poisonSpeedMul = 1.5f;
     apple.poisonDuration = 5.0f;
+    apple.poisonTTL = 8.0f;
     apple.confuseDuration = 4.0f;
+    apple.confuseTTL = 8.0f;
 }

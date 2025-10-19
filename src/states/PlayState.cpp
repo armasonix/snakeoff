@@ -3,9 +3,11 @@
 #include "systems/Collision.h"
 #include "states/PauseState.h"
 #include "states/GameOverState.h"
+#include "core/StateMachine.h"
 #include "world/ProcGen.h"
 #include <SFML/Graphics.hpp>
 #include <functional>
+#include <algorithm>
 #include <cmath>
 
 PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
@@ -111,7 +113,7 @@ void PlayState::handleEvent(const sf::Event& e)
 
         if (key == sf::Keyboard::P)
         {
-            sm_.push(std::make_unique<class PauseState>(sm_, win_, cfg_, res_));
+            sm_.push(std::make_unique<PauseState>(sm_, res_));
         }
     }
 }
@@ -122,12 +124,15 @@ void PlayState::update(float dt)
     shake_.update(dt);
     snake_.update(dt);
 
+    confuseHueT_ += dt;
+    if (confuseVisT_ > 0.f) confuseVisT_ -= dt;
+
     if (startDelay_ > 0.f) { startDelay_ -= dt; return; }
 
-    if (appleKind_ == AppleKind::Bonus && appleTTL_ > 0.f)
+    if (apple_ && appleKind_ != AppleKind::Normal && appleTTL_ > 0.f) 
     {
         appleTTL_ -= dt;
-        if (appleTTL_ <= 0.f)
+        if (appleTTL_ <= 0.f) 
         {
             apple_.reset();
             spawnApple();
@@ -137,6 +142,7 @@ void PlayState::update(float dt)
     const float dtEffective = dt * effects_.speedMul();
 
     timeAcc_ += dtEffective;
+    portalPulseT_ += dt;
 
     const float step = cfg_.paramsFor(cfg_.difficulty).stepSec;
     while (timeAcc_ >= step) 
@@ -206,6 +212,7 @@ void PlayState::update(float dt)
                 break;
             case AppleKind::Confuse:
                 effects_.applyInvert(cfg_.apple.confuseDuration);
+                confuseVisT_ = cfg_.apple.confuseDuration;
                 break;
             default:
                 break;
@@ -214,6 +221,24 @@ void PlayState::update(float dt)
             shake_.start(0.12f, 2.0f);
         }
     }
+}
+
+// h: [0..360), s/v: [0..1]
+static sf::Color hsv(float h, float s, float v, sf::Uint8 a = 255) 
+{
+    h = std::fmodf(h, 360.f); if (h < 0) h += 360.f;
+    float c = v * s;
+    float x = c * (1.f - std::fabsf(std::fmodf(h / 60.f, 2.f) - 1.f));
+    float m = v - c;
+    float r = 0, g = 0, b = 0;
+    if (h < 60.f) { r = c; g = x; b = 0; }
+    else if (h < 120.f) { r = x; g = c; b = 0; }
+    else if (h < 180.f) { r = 0; g = c; b = x; }
+    else if (h < 240.f) { r = 0; g = x; b = c; }
+    else if (h < 300.f) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
+    auto to8 = [](float u) { return (sf::Uint8)std::clamp<int>(int((u) * 255.f + 0.5f), 0, 255); };
+    return sf::Color(to8(r + m), to8(g + m), to8(b + m), a);
 }
 
 void PlayState::draw(sf::RenderTarget& rt)
@@ -243,6 +268,12 @@ void PlayState::draw(sf::RenderTarget& rt)
         }
     }
 
+    const float t = portalPulseT_;
+    const float freq = 1.5f;
+    const float pulseScale = 1.0f + 0.12f * std::sin(2.f * 3.1415926f * freq * t);
+    const sf::Uint8 baseA = 150;
+    const sf::Uint8 pulseA = (sf::Uint8)(80 * (0.5f + 0.5f * std::sin(2.f * 3.1415926f * freq * t)));
+
     auto drawCellFilled = [&](const Vec2i& c, sf::Color col) 
         {
         sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
@@ -251,16 +282,53 @@ void PlayState::draw(sf::RenderTarget& rt)
         rt.draw(r);
         };
 
+    auto drawPulsingCircle = [&](const Vec2i& c, sf::Color col, bool darker) 
+        {
+        const float cx = (float)c.x * CELL + CELL * 0.5f;
+        const float cy = (float)c.y * CELL + CELL * 0.5f;
+        const float radius = (CELL - 6) * 0.5f;
+
+        if (darker) { col.r = (sf::Uint8)(col.r * 0.5f); col.g = (sf::Uint8)(col.g * 0.5f); col.b = (sf::Uint8)(col.b * 0.5f); }
+        col.a = (sf::Uint8)std::min<int>(255, baseA + pulseA);
+
+        sf::CircleShape circ(radius);
+        circ.setOrigin(radius, radius);
+        circ.setPosition(cx, cy);
+        circ.setScale(pulseScale, pulseScale);
+        circ.setFillColor(col);
+        rt.draw(circ);
+        };
+
     for (const auto& p : portals_) 
     {
         // enter brighter
-        drawCellFilled(p.a, sf::Color(p.color.r, p.color.g, p.color.b, 220));
+        drawCellFilled(p.a, sf::Color(p.color.r, p.color.g, p.color.b, 180));
+        drawPulsingCircle(p.a, p.color, /*darker=*/false);
+
         // exit darker
-        drawCellFilled(p.b, sf::Color(p.color.r / 2, p.color.g / 2, p.color.b / 2, 220));
+        sf::Color outCol(p.color.r / 2, p.color.g / 2, p.color.b / 2);
+        drawCellFilled(p.b, sf::Color(outCol.r, outCol.g, outCol.b, 160));
+        drawPulsingCircle(p.b, outCol, /*darker=*/true);
     }
 
     if (apple_) apple_->draw(rt);
     snake_.draw(rt);
+
+    if (confuseVisT_ > 0.f) {
+        // color speed
+        const float hueBase = std::fmod(confuseHueT_ * 180.f, 360.f);
+        int idx = 0;
+        for (const auto& cell : snake_.body()) 
+        {
+            const float h = std::fmod(hueBase + idx * 12.f, 360.f);
+            const sf::Color col = hsv(h, 0.85f, 1.0f, 150); // opacity
+            sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
+            r.setPosition((float)cell.x * CELL + 1.f, (float)cell.y * CELL + 1.f);
+            r.setFillColor(col);
+            rt.draw(r);
+            ++idx;
+        }
+    }
 
     if (apple_) 
     {
@@ -283,16 +351,25 @@ void PlayState::draw(sf::RenderTarget& rt)
         appleCircle.setFillColor(col);
         rt.draw(appleCircle);
 
-        if (appleKind_ == AppleKind::Bonus && appleTTL_ > 0.f) 
+        if (appleTTL_ > 0.f) 
         {
-            const float ttl = std::max(0.001f, cfg_.apple.bonusTTL);
-            const float frac = std::clamp(appleTTL_ / ttl, 0.f, 1.f);
-            const float w = (CELL - 2) * frac;
-
-            sf::RectangleShape bar({ w, 4.f });
-            bar.setPosition(px + 1.f, py - 5.f);
-            bar.setFillColor(col);
-            rt.draw(bar);
+            float ttlTotal = 0.f;
+            switch (appleKind_) 
+            {
+            case AppleKind::Bonus:   ttlTotal = cfg_.apple.bonusTTL;   break;
+            case AppleKind::Poison:  ttlTotal = cfg_.apple.poisonTTL;  break;
+            case AppleKind::Confuse: ttlTotal = cfg_.apple.confuseTTL; break;
+            default: break;
+            }
+            if (ttlTotal > 0.f) 
+            {
+                const float frac = std::clamp(appleTTL_ / ttlTotal, 0.f, 1.f);
+                const float w = (CELL - 2) * frac;
+                sf::RectangleShape bar({ w, 4.f });
+                bar.setPosition(px + 1.f, py - 5.f);
+                bar.setFillColor(col);
+                rt.draw(bar);
+            }
         }
     }
 
@@ -302,18 +379,18 @@ void PlayState::draw(sf::RenderTarget& rt)
     {
         sf::Text info("", res_.font(), 16);
         info.setPosition(12.f, 48.f);
-        std::string s;
+        std::string msg;
 
         if (effects_.spdRemain() > 0.f) 
         {
-            s += "SPEED x" + std::to_string(effects_.speedMul()) +
+            msg += "SPEED x" + std::to_string(effects_.speedMul()) +
                 " (" + std::to_string((int)std::ceil(effects_.spdRemain())) + "s)  ";
         }
         if (effects_.invRemain() > 0.f) 
         {
-            s += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
+            msg += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
         }
-        info.setString(s);
+        info.setString(msg);
         info.setFillColor(sf::Color(180, 220, 180));
         rt.draw(info);
     }
@@ -350,14 +427,19 @@ void PlayState::spawnApple()
 
     appleKind_ = rollKind();
     // TTL for bonus
-    appleTTL_ = (appleKind_ == AppleKind::Bonus) ? cfg_.apple.bonusTTL : 0.f;
+    switch (appleKind_)
+    {
+    case AppleKind::Normal:  appleTTL_ = 0.f;                         break;
+    case AppleKind::Bonus:   appleTTL_ = cfg_.apple.bonusTTL;         break;
+    case AppleKind::Poison:  appleTTL_ = cfg_.apple.poisonTTL;        break;
+    case AppleKind::Confuse: appleTTL_ = cfg_.apple.confuseTTL;       break;
+    }
 }
 
-void PlayState::die() 
+void PlayState::die()
 {
     sfxDeath_.play();
-    // transfer to death screen
-    sm_.push(std::make_unique<class GameOverState>(sm_, win_, cfg_, res_, score_.value()));
+    sm_.push(std::make_unique<GameOverState>(sm_, win_, cfg_, res_, score_.value()));
 }
 
 void PlayState::flashSnake() 

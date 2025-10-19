@@ -115,7 +115,8 @@
 				15,
 				16,
 				17,
-				18
+				18,
+				19
 			]
 		}
 	],
@@ -190,16 +191,17 @@
 				15,
 				16,
 				17,
-				18
+				18,
+				19
 			]
 		},
 		{
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				19,
 				20,
-				21
+				21,
+				22
 			]
 		}
 	],
@@ -269,6 +271,12 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/states/MenuState.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/states/PauseState.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{

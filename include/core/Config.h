@@ -32,9 +32,11 @@ public:
         // poison: acceleration
         float poisonSpeedMul = 1.5f;   // speed multi
         float poisonDuration = 5.0f;
+        float poisonTTL = 8.0f;
 
         // confuse: control inverse
         float confuseDuration = 4.0f;
+        float confuseTTL = 8.0f;
     };
 
     AppleParams apple;
