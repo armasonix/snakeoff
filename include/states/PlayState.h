@@ -62,6 +62,8 @@ private:
     void spawnApple();
     void die();
 
+    bool initialized_ = false;
+
     std::vector<PortalPair> portals_;
     Vec2i portalLockCell_{ -9999, -9999 }; // cell-lock
 

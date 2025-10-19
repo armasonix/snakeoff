@@ -46,6 +46,10 @@ void DifficultyState::handleEvent(const sf::Event& e)
     {
         sm_.pop();
     }
+    if (key == sf::Keyboard::Escape)
+    {
+        sm_.pop();
+    }
 }
 
 void DifficultyState::update(float) {}

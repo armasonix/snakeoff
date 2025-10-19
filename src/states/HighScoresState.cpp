@@ -15,6 +15,10 @@ void HighScoresState::handleEvent(const sf::Event& e)
         {
             sm_.pop(); // back to menu
         }
+        if (e.key.code == sf::Keyboard::Escape)
+        {
+            sm_.pop();
+        }
     }
 }
 

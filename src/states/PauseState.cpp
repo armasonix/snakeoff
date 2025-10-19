@@ -1,12 +1,12 @@
 #include "states/PauseState.h"
 #include "core/StateMachine.h"
 #include "core/Resources.h"
-
+#include "states/PlayState.h"
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 
-PauseState::PauseState(StateMachine& sm, Resources& res)
-    : sm_(sm), res_(res) {}
+PauseState::PauseState(StateMachine& sm, Resources& res, PlayState* owner)
+    : sm_(sm), res_(res), owner_(owner) {}
 
 void PauseState::onEnter() 
 {
@@ -21,10 +21,16 @@ void PauseState::handleEvent(const sf::Event& e)
         switch (e.key.code) 
         {
         case sf::Keyboard::P:
+        case sf::Keyboard::B:
+            res_.resumeMusic();
+            sm_.pop();
+            return;
         case sf::Keyboard::Escape:
             res_.resumeMusic();
+            sm_.pop();
             return;
         case sf::Keyboard::Enter:
+            res_.resumeMusic();
             sm_.pop();
             return;
         case sf::Keyboard::H:
@@ -33,9 +39,10 @@ void PauseState::handleEvent(const sf::Event& e)
         default: break;
         }
     }
+    return;
 }
 
-void PauseState::update(float /*dt*/) {}
+void PauseState::update(float) {}
 
 void PauseState::draw(sf::RenderTarget& rt) 
 {

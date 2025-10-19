@@ -10,6 +10,7 @@
 				"E:/SnakeOff/SnakeOff/src/core/Resources.cpp",
 				"E:/SnakeOff/SnakeOff/src/core/StateMachine.cpp",
 				"E:/SnakeOff/SnakeOff/src/entities/Apple.cpp",
+				"E:/SnakeOff/SnakeOff/src/entities/Powerup.cpp",
 				"E:/SnakeOff/SnakeOff/src/entities/Snake.cpp",
 				"E:/SnakeOff/SnakeOff/src/entities/apples/NormalApple.cpp",
 				"E:/SnakeOff/SnakeOff/src/main.cpp",

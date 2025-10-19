@@ -34,6 +34,7 @@ void SettingsState::handleEvent(const sf::Event& e)
     case sf::Keyboard::S: selected_ = (selected_ + 1) % Count; break;
     case sf::Keyboard::Enter: toggleCurrent(); break;
     case sf::Keyboard::B:
+        sm_.pop(); break;
     case sf::Keyboard::Escape:
         sm_.pop(); break;
     default: break;

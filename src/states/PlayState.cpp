@@ -26,6 +26,10 @@ void PlayState::onEnter()
     effects_.reset(); // clear effects
     appleKind_ = AppleKind::Normal;
     appleTTL_ = 0.f;
+    if (initialized_) 
+    {
+        return;
+    }
     level_.clear();
     level_.buildBorders();
     res_.ensureSessionLoop();
@@ -51,6 +55,7 @@ void PlayState::onEnter()
 
     spawnPortals(1);
     spawnApple();
+    initialized_ = true;
 }
 
 void PlayState::spawnPortals(int pairs)
