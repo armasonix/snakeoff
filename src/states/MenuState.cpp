@@ -2,6 +2,7 @@
 #include "states/PlayState.h"
 #include "core/StateMachine.h" 
 #include <SFML/Graphics.hpp>
+#include "states/DifficultyState.h"
 #include "states/HighScoresState.h"
 
 MenuState::MenuState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
@@ -18,13 +19,26 @@ void MenuState::handleEvent(const sf::Event& e)
         if (e.key.code == sf::Keyboard::Enter) 
         {
             if (selected_ == 0) startGame();
-            else if (selected_ == 1) changeDifficulty();
+            else if (selected_ == 1) sm_.push(std::make_unique<DifficultyState>(sm_, win_, cfg_, res_)); // difficulty
             else if (selected_ == 2) sm_.push(std::make_unique<HighScoresState>(sm_, win_, cfg_, res_)); // highlights
             else if (selected_ == 4) win_.close();
         }
     }
 }
 void MenuState::update(float) {}
+
+static const char* difficultyName(Difficulty d)
+{
+    switch (d)
+    {
+    case Difficulty::D1: return "easy peasy";
+    case Difficulty::D2: return "i am just walkaround";
+    case Difficulty::D3: return "hold on my cup boy";
+    case Difficulty::D4: return "lets rock";
+    case Difficulty::D5: return "we are already dead";
+    }
+    return "unknown";
+}
 
 void MenuState::draw(sf::RenderTarget& rt) 
 {

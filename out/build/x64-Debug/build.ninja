@@ -113,6 +113,14 @@ build CMakeFiles\SnakeOff.dir\src\main.cpp.obj: CXX_COMPILER__SnakeOff_unscanned
   TARGET_COMPILE_PDB = CMakeFiles\SnakeOff.dir\
   TARGET_PDB = SnakeOff.pdb
 
+build CMakeFiles\SnakeOff.dir\src\states\DifficultyState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\DifficultyState.cpp || cmake_object_order_depends_target_SnakeOff
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
+  OBJECT_DIR = CMakeFiles\SnakeOff.dir
+  OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
+  TARGET_COMPILE_PDB = CMakeFiles\SnakeOff.dir\
+  TARGET_PDB = SnakeOff.pdb
+
 build CMakeFiles\SnakeOff.dir\src\states\GameOverState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\GameOverState.cpp || cmake_object_order_depends_target_SnakeOff
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
@@ -217,7 +225,7 @@ build CMakeFiles\SnakeOff.dir\src\world\ProcGen.cpp.obj: CXX_COMPILER__SnakeOff_
 #############################################
 # Link the executable SnakeOff.exe
 
-build SnakeOff.exe: CXX_EXECUTABLE_LINKER__SnakeOff_Debug CMakeFiles\SnakeOff.dir\src\core\Application.cpp.obj CMakeFiles\SnakeOff.dir\src\core\Config.cpp.obj CMakeFiles\SnakeOff.dir\src\core\Resources.cpp.obj CMakeFiles\SnakeOff.dir\src\core\StateMachine.cpp.obj CMakeFiles\SnakeOff.dir\src\entities\Apple.cpp.obj CMakeFiles\SnakeOff.dir\src\entities\Snake.cpp.obj CMakeFiles\SnakeOff.dir\src\entities\apples\NormalApple.cpp.obj CMakeFiles\SnakeOff.dir\src\main.cpp.obj CMakeFiles\SnakeOff.dir\src\states\GameOverState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\HighScoresState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\MenuState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\PauseState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\PlayState.cpp.obj CMakeFiles\SnakeOff.dir\src\systems\HighScores.cpp.obj CMakeFiles\SnakeOff.dir\src\systems\Spawner.cpp.obj CMakeFiles\SnakeOff.dir\src\ui\HUD.cpp.obj CMakeFiles\SnakeOff.dir\src\util\Random.cpp.obj CMakeFiles\SnakeOff.dir\src\vfx\CameraShake.cpp.obj CMakeFiles\SnakeOff.dir\src\world\Level.cpp.obj CMakeFiles\SnakeOff.dir\src\world\ProcGen.cpp.obj | E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-graphics-d.lib E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-audio-d.lib E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-window-d.lib E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-system-d.lib
+build SnakeOff.exe: CXX_EXECUTABLE_LINKER__SnakeOff_Debug CMakeFiles\SnakeOff.dir\src\core\Application.cpp.obj CMakeFiles\SnakeOff.dir\src\core\Config.cpp.obj CMakeFiles\SnakeOff.dir\src\core\Resources.cpp.obj CMakeFiles\SnakeOff.dir\src\core\StateMachine.cpp.obj CMakeFiles\SnakeOff.dir\src\entities\Apple.cpp.obj CMakeFiles\SnakeOff.dir\src\entities\Snake.cpp.obj CMakeFiles\SnakeOff.dir\src\entities\apples\NormalApple.cpp.obj CMakeFiles\SnakeOff.dir\src\main.cpp.obj CMakeFiles\SnakeOff.dir\src\states\DifficultyState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\GameOverState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\HighScoresState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\MenuState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\PauseState.cpp.obj CMakeFiles\SnakeOff.dir\src\states\PlayState.cpp.obj CMakeFiles\SnakeOff.dir\src\systems\HighScores.cpp.obj CMakeFiles\SnakeOff.dir\src\systems\Spawner.cpp.obj CMakeFiles\SnakeOff.dir\src\ui\HUD.cpp.obj CMakeFiles\SnakeOff.dir\src\util\Random.cpp.obj CMakeFiles\SnakeOff.dir\src\vfx\CameraShake.cpp.obj CMakeFiles\SnakeOff.dir\src\world\Level.cpp.obj CMakeFiles\SnakeOff.dir\src\world\ProcGen.cpp.obj | E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-graphics-d.lib E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-audio-d.lib E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-window-d.lib E$:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-system-d.lib
   FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -MDd
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
   LINK_LIBRARIES = E:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-graphics-d.lib  E:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-audio-d.lib  E:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-window-d.lib  E:\SnakeOff\SnakeOff\lib\SFML\lib\sfml-system-d.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib

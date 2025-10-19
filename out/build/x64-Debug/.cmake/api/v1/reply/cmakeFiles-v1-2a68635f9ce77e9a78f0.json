@@ -13,6 +13,7 @@
 				"E:/SnakeOff/SnakeOff/src/entities/Snake.cpp",
 				"E:/SnakeOff/SnakeOff/src/entities/apples/NormalApple.cpp",
 				"E:/SnakeOff/SnakeOff/src/main.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/DifficultyState.cpp",
 				"E:/SnakeOff/SnakeOff/src/states/GameOverState.cpp",
 				"E:/SnakeOff/SnakeOff/src/states/HighScoresState.cpp",
 				"E:/SnakeOff/SnakeOff/src/states/MenuState.cpp",
