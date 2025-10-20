@@ -1,6 +1,12 @@
 #include "states/HighScoresState.h"
 #include "core/StateMachine.h"
 
+HighScoresState::HighScoresState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
+    : sm_(sm), win_(win), cfg_(cfg), res_(res)
+{
+    sfxHit_.setBuffer(res_.sfxUiHit());
+}
+
 void HighScoresState::onEnter() 
 {
     hs_.load(path_);
@@ -14,9 +20,11 @@ void HighScoresState::handleEvent(const sf::Event& e)
         if (e.key.code == sf::Keyboard::Enter || e.key.code == sf::Keyboard::B) 
         {
             sm_.pop(); // back to menu
+            sfxHit_.play();
         }
         if (e.key.code == sf::Keyboard::Escape)
         {
+            sfxHit_.play();
             sm_.pop();
         }
     }
@@ -41,7 +49,7 @@ void HighScoresState::draw(sf::RenderTarget& rt)
         y += 28.f;
     }
 
-    sf::Text hint("Enter/B - back", res_.font(), 18);
+    sf::Text hint("Enter/B or Esc - back", res_.font(), 18);
     hint.setPosition(60, y + 20.f);
     hint.setFillColor(sf::Color(180, 180, 180));
     rt.draw(hint);

@@ -25,4 +25,7 @@ private:
     Resources& res_;
 
     void toggleCurrent();
+
+    sf::Sound sfxMove_;
+    sf::Sound sfxHit_;
 };

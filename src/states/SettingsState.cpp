@@ -3,7 +3,11 @@
 #include <algorithm>
 
 SettingsState::SettingsState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
-    : sm_(sm), win_(win), cfg_(cfg), res_(res) {}
+    : sm_(sm), win_(win), cfg_(cfg), res_(res) 
+{
+    sfxMove_.setBuffer(res_.sfxUiMove());
+    sfxHit_.setBuffer(res_.sfxUiHit());
+}
 
 void SettingsState::onEnter() 
 {
@@ -33,16 +37,20 @@ void SettingsState::handleEvent(const sf::Event& e)
     case sf::Keyboard::W:
     case sf::Keyboard::Up:
         selected_ = (selected_ - 1 + Count) % Count;
+        sfxMove_.play();
         break;
     case sf::Keyboard::S:
     case sf::Keyboard::Down:
         selected_ = (selected_ + 1) % Count;
+        sfxMove_.play();
         break;
     case sf::Keyboard::Enter:
         toggleCurrent();
+        sfxHit_.play();
         break;
     case sf::Keyboard::B:
     case sf::Keyboard::Escape:
+        sfxHit_.play();
         sm_.pop();
         break;
     default: break;

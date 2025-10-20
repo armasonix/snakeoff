@@ -34,4 +34,7 @@ private:
     Resources& res_;
 
     int indexFromDifficulty(Difficulty d) const;
+
+    sf::Sound sfxMove_;
+    sf::Sound sfxHit_;
 };

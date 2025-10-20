@@ -10,6 +10,8 @@ void GameOverState::onEnter()
     askSel_ = 0;
     optSel_ = 0;
     phase_ = Phase::AskSave;
+    sfxMove_.setBuffer(res_.sfxUiMove());
+    sfxHit_.setBuffer(res_.sfxUiHit());
 }
 
 void GameOverState::handleEvent(const sf::Event& e) 
@@ -21,10 +23,12 @@ void GameOverState::handleEvent(const sf::Event& e)
             if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S
             || e.key.code == sf::Keyboard::Up || e.key.code == sf::Keyboard::Down)
                 askSel_ = 1 - askSel_;
+                sfxMove_.play();
             if (e.key.code == sf::Keyboard::Enter) 
             {
                 if (askSel_ == 1) phase_ = Phase::EnterName; // yes - enter name
                 else             phase_ = Phase::Options;   // no - to options
+                sfxHit_.play();
             }
         }
         return;
@@ -45,6 +49,7 @@ void GameOverState::handleEvent(const sf::Event& e)
             if (e.key.code == sf::Keyboard::BackSpace && !name_.empty()) 
             {
                 name_.pop_back();
+                sfxHit_.play();
             }
             if (e.key.code == sf::Keyboard::Enter) 
             {
@@ -52,10 +57,12 @@ void GameOverState::handleEvent(const sf::Event& e)
                 hs_.submit(nm, score_);
                 hs_.save(path_);
                 phase_ = Phase::Options;
+                sfxHit_.play();
             }
             if (e.key.code == sf::Keyboard::B || e.key.code == sf::Keyboard::Escape)
             {
                 phase_ = Phase::AskSave; // back to selection yes/no
+                sfxHit_.play();
             }
         }
         return;
@@ -67,10 +74,12 @@ void GameOverState::handleEvent(const sf::Event& e)
         if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S
         || e.key.code == sf::Keyboard::Up || e.key.code == sf::Keyboard::Down)
             optSel_ = 1 - optSel_;
+            sfxMove_.play();
         if (e.key.code == sf::Keyboard::Enter) 
         {
             if (optSel_ == 0) sm_.push(std::make_unique<PlayState>(sm_, win_, cfg_, res_));
             else             sm_.push(std::make_unique<MenuState>(sm_, win_, cfg_, res_));
+            sfxHit_.play();
         }
     }
 }

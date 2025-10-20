@@ -15,6 +15,8 @@ DifficultyState::DifficultyState(StateMachine& sm, sf::RenderWindow& win, Config
         { Difficulty::D4, "4 - lets rock",           "fast, +8 scores for apple"        },
         { Difficulty::D5, "5 - we are already dead", "very fast, +10 scores for apple"  },
     };
+    sfxMove_.setBuffer(res_.sfxUiMove());
+    sfxHit_.setBuffer(res_.sfxUiHit());
 }
 
 int DifficultyState::indexFromDifficulty(Difficulty d) const
@@ -36,18 +38,22 @@ void DifficultyState::handleEvent(const sf::Event& e)
         if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::Up)
         {
             selected_ = (selected_ + (int)items_.size() - 1) % (int)items_.size();
+            sfxMove_.play();
         }
         else if (e.key.code == sf::Keyboard::S || e.key.code == sf::Keyboard::Down)
         {
             selected_ = (selected_ + 1) % (int)items_.size();
+            sfxMove_.play();
         }
         else if (e.key.code == sf::Keyboard::Enter)
         {
             cfg_.difficulty = (Difficulty)selected_;
             sm_.push(std::make_unique<PlayState>(sm_, win_, cfg_, res_));
+            sfxHit_.play();
         }
         else if (e.key.code == sf::Keyboard::B || e.key.code == sf::Keyboard::Escape)
         {
+            sfxHit_.play();
             sm_.pop();
         }
     }

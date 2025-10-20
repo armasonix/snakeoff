@@ -4,6 +4,7 @@
 #include "core/Resources.h"
 #include "systems/HighScores.h"
 #include <string>
+#include <SFML/Audio.hpp>
 
 class GameOverState : public IGameState 
 {
@@ -38,4 +39,7 @@ private:
     int optSel_{ 0 }; // 0=start, 1=to main menu
 
     Phase phase_{ Phase::AskSave };
+
+    sf::Sound sfxMove_;
+    sf::Sound sfxHit_;
 };

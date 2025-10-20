@@ -6,7 +6,11 @@
 #include <algorithm>
 
 PauseState::PauseState(StateMachine& sm, Resources& res, PlayState* owner)
-    : sm_(sm), res_(res), owner_(owner) {}
+    : sm_(sm), res_(res), owner_(owner) 
+{
+    sfxHit_.setBuffer(res_.sfxUiHit());
+    sfxMove_.setBuffer(res_.sfxUiMove());
+}
 
 void PauseState::onEnter() 
 {
@@ -23,18 +27,22 @@ void PauseState::handleEvent(const sf::Event& e)
         case sf::Keyboard::P:
         case sf::Keyboard::B:
             res_.resumeMusic();
+            sfxHit_.play();
             sm_.pop();
             return;
         case sf::Keyboard::Escape:
             res_.resumeMusic();
+            sfxHit_.play();
             sm_.pop();
             return;
         case sf::Keyboard::Enter:
             res_.resumeMusic();
+            sfxHit_.play();
             sm_.pop();
             return;
         case sf::Keyboard::H:
             showHelp_ = !showHelp_;
+            sfxMove_.play();
             return;
         default: break;
         }

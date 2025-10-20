@@ -2,6 +2,7 @@
 #include "states/IGameState.h"
 #include <vector>
 #include <string>
+#include <SFML/Audio.hpp> 
 
 class MenuState : public IGameState 
 {
@@ -21,4 +22,7 @@ private:
     std::vector<std::string> items_{ "Start Game","Difficulty","Highlights","Settings","Quit" };
     void startGame();
     void changeDifficulty();
+
+    sf::Sound sfxMove_;
+    sf::Sound sfxHit_;
 };

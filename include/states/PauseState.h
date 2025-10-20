@@ -2,6 +2,7 @@
 #include "states/IGameState.h"
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Audio.hpp>
 
 class StateMachine;
 class Resources;
@@ -25,4 +26,7 @@ private:
     StateMachine& sm_;
     Resources& res_;
     PlayState* owner_ = nullptr;
+
+    sf::Sound sfxMove_;
+    sf::Sound sfxHit_;
 };
