@@ -106,16 +106,24 @@ void PlayState::handleEvent(const sf::Event& e)
         if (effects_.inverted())
         {
             // invert W<->S, A<->D
-            if (key == sf::Keyboard::W) key = sf::Keyboard::S;
-            else if (key == sf::Keyboard::S) key = sf::Keyboard::W;
-            else if (key == sf::Keyboard::A) key = sf::Keyboard::D;
-            else if (key == sf::Keyboard::D) key = sf::Keyboard::A;
+            if (key == sf::Keyboard::W)          key = sf::Keyboard::S;
+            else if (key == sf::Keyboard::S)     key = sf::Keyboard::W;
+            else if (key == sf::Keyboard::A)     key = sf::Keyboard::D;
+            else if (key == sf::Keyboard::D)     key = sf::Keyboard::A;
+            else if (key == sf::Keyboard::Up)    key = sf::Keyboard::Down;
+            else if (key == sf::Keyboard::Down)  key = sf::Keyboard::Up;
+            else if (key == sf::Keyboard::Left)  key = sf::Keyboard::Right;
+            else if (key == sf::Keyboard::Right) key = sf::Keyboard::Left;
         }
 
-        if (key == sf::Keyboard::W) snake_.setDirection(Direction::Up);
-        if (key == sf::Keyboard::S) snake_.setDirection(Direction::Down);
-        if (key == sf::Keyboard::A) snake_.setDirection(Direction::Left);
-        if (key == sf::Keyboard::D) snake_.setDirection(Direction::Right);
+        if (key == sf::Keyboard::W || key == sf::Keyboard::Up)
+            snake_.setDirection(Direction::Up);
+        if (key == sf::Keyboard::S || key == sf::Keyboard::Down)
+            snake_.setDirection(Direction::Down);
+        if (key == sf::Keyboard::A || key == sf::Keyboard::Left)
+            snake_.setDirection(Direction::Left);
+        if (key == sf::Keyboard::D || key == sf::Keyboard::Right)
+            snake_.setDirection(Direction::Right);
 
         if (key == sf::Keyboard::P)
         {

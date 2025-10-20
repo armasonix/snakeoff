@@ -30,13 +30,21 @@ void SettingsState::handleEvent(const sf::Event& e)
     if (e.type != sf::Event::KeyPressed) return;
     switch (e.key.code) 
     {
-    case sf::Keyboard::W: selected_ = (selected_ - 1 + Count) % Count; break;
-    case sf::Keyboard::S: selected_ = (selected_ + 1) % Count; break;
-    case sf::Keyboard::Enter: toggleCurrent(); break;
+    case sf::Keyboard::W:
+    case sf::Keyboard::Up:
+        selected_ = (selected_ - 1 + Count) % Count;
+        break;
+    case sf::Keyboard::S:
+    case sf::Keyboard::Down:
+        selected_ = (selected_ + 1) % Count;
+        break;
+    case sf::Keyboard::Enter:
+        toggleCurrent();
+        break;
     case sf::Keyboard::B:
-        sm_.pop(); break;
     case sf::Keyboard::Escape:
-        sm_.pop(); break;
+        sm_.pop();
+        break;
     default: break;
     }
 }
@@ -57,7 +65,7 @@ void SettingsState::draw(sf::RenderTarget& rt)
     const auto pos = view.getCenter() - 0.5f * view.getSize();
 
     rt.draw(T(font, 36, sf::Color::White, "Settings", pos.x + 40.f, pos.y + 40.f));
-    rt.draw(T(font, 18, sf::Color(200, 200, 200), "W/S - move, Enter select, B/Esc - back", pos.x + 40.f, pos.y + 90.f));
+    rt.draw(T(font, 18, sf::Color(200, 200, 200), "W/S or Up/Down - move, Enter select, B/Esc - back", pos.x + 40.f, pos.y + 90.f));
 
     float y = pos.y + 150.f;
     auto row = [&](const char* caption, bool on, bool sel) 

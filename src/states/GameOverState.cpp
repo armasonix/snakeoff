@@ -18,7 +18,8 @@ void GameOverState::handleEvent(const sf::Event& e)
     {
         if (e.type == sf::Event::KeyPressed) 
         {
-            if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S)
+            if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S
+            || e.key.code == sf::Keyboard::Up || e.key.code == sf::Keyboard::Down)
                 askSel_ = 1 - askSel_;
             if (e.key.code == sf::Keyboard::Enter) 
             {
@@ -52,7 +53,7 @@ void GameOverState::handleEvent(const sf::Event& e)
                 hs_.save(path_);
                 phase_ = Phase::Options;
             }
-            if (e.key.code == sf::Keyboard::B) 
+            if (e.key.code == sf::Keyboard::B || e.key.code == sf::Keyboard::Escape)
             {
                 phase_ = Phase::AskSave; // back to selection yes/no
             }
@@ -63,7 +64,8 @@ void GameOverState::handleEvent(const sf::Event& e)
     // Phase::Options - select start game / main menu
     if (e.type == sf::Event::KeyPressed) 
     {
-        if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S)
+        if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S
+        || e.key.code == sf::Keyboard::Up || e.key.code == sf::Keyboard::Down)
             optSel_ = 1 - optSel_;
         if (e.key.code == sf::Keyboard::Enter) 
         {
@@ -111,14 +113,14 @@ void GameOverState::draw(sf::RenderTarget& rt)
         b.setFillColor(askSel_ == 1 ? sf::Color::Green : sf::Color::White);
         rt.draw(a); rt.draw(b);
 
-        sf::Text hint("W/S - select, Enter - approve", res_.font(), 16);
+        sf::Text hint("W/S or Up/Down - move, Enter - select", res_.font(), 16);
         hint.setPosition(60, 220); hint.setFillColor(sf::Color(180, 180, 180)); rt.draw(hint);
         return;
     }
 
     if (phase_ == Phase::EnterName) 
     {
-        sf::Text q("Type name (Enter - save, B - back):", res_.font(), 22);
+        sf::Text q("Type name (Enter - save, B/Esc - back):", res_.font(), 22);
         q.setPosition(60, 140); q.setFillColor(sf::Color::White); rt.draw(q);
 
         sf::Text nameText(name_.empty() ? "ABC" : name_, res_.font(), 26);
@@ -136,6 +138,6 @@ void GameOverState::draw(sf::RenderTarget& rt)
     o2.setFillColor(optSel_ == 1 ? sf::Color::Green : sf::Color::White);
     rt.draw(o1); rt.draw(o2);
 
-    sf::Text hint("W/S - select, Enter approve", res_.font(), 16);
+    sf::Text hint("W/S or Up/Down - move, Enter - select", res_.font(), 16);
     hint.setPosition(60, 260); hint.setFillColor(sf::Color(180, 180, 180)); rt.draw(hint);
 }

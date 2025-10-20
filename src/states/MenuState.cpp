@@ -14,20 +14,31 @@ void MenuState::onEnter()
     res_.ensureMenuLoop();
 }
 
-void MenuState::handleEvent(const sf::Event& e) 
+void MenuState::handleEvent(const sf::Event& e)
 {
-    if (e.type == sf::Event::KeyPressed) 
+    if (e.type != sf::Event::KeyPressed) return;
+
+    switch (e.key.code)
     {
-        if (e.key.code == sf::Keyboard::W) selected_ = (selected_ + (int)items_.size() - 1) % (int)items_.size();
-        if (e.key.code == sf::Keyboard::S) selected_ = (selected_ + 1) % (int)items_.size();
-        if (e.key.code == sf::Keyboard::Enter) 
-        {
-            if (selected_ == 0) startGame();
-            else if (selected_ == 1) sm_.push(std::make_unique<DifficultyState>(sm_, win_, cfg_, res_)); // difficulty
-            else if (selected_ == 2) sm_.push(std::make_unique<HighScoresState>(sm_, win_, cfg_, res_)); // highlights
-            else if (selected_ == 3) sm_.push(std::make_unique<SettingsState>(sm_, win_, cfg_, res_));   // settings
-            else if (selected_ == 4) win_.close();
-        }
+    case sf::Keyboard::W:
+    case sf::Keyboard::Up:
+        selected_ = (selected_ + (int)items_.size() - 1) % (int)items_.size();
+        break;
+
+    case sf::Keyboard::S:
+    case sf::Keyboard::Down:
+        selected_ = (selected_ + 1) % (int)items_.size();
+        break;
+
+    case sf::Keyboard::Enter:
+        if (selected_ == 0) sm_.push(std::make_unique<PlayState>(sm_, win_, cfg_, res_));
+        else if (selected_ == 1) sm_.push(std::make_unique<DifficultyState>(sm_, win_, cfg_, res_));
+        else if (selected_ == 2) sm_.push(std::make_unique<SettingsState>(sm_, win_, cfg_, res_));
+        else if (selected_ == 3) sm_.push(std::make_unique<HighScoresState>(sm_, win_, cfg_, res_));
+        else if (selected_ == 4) win_.close();
+        break;
+
+    default: break;
     }
 }
 void MenuState::update(float) {}

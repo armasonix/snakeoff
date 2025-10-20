@@ -31,24 +31,25 @@ void DifficultyState::onEnter()
 
 void DifficultyState::handleEvent(const sf::Event& e)
 {
-    if (e.type != sf::Event::KeyPressed) return;
-
-    const auto key = e.key.code;
-    if (key == sf::Keyboard::W) { selected_ = (selected_ - 1 + (int)items_.size()) % (int)items_.size(); }
-    if (key == sf::Keyboard::S) { selected_ = (selected_ + 1) % (int)items_.size(); }
-
-    if (key == sf::Keyboard::Enter)
+    if (e.type == sf::Event::KeyPressed)
     {
-        cfg_.difficulty = items_[selected_].d;
-        sm_.pop();
-    }
-    if (key == sf::Keyboard::B)
-    {
-        sm_.pop();
-    }
-    if (key == sf::Keyboard::Escape)
-    {
-        sm_.pop();
+        if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::Up)
+        {
+            selected_ = (selected_ + (int)items_.size() - 1) % (int)items_.size();
+        }
+        else if (e.key.code == sf::Keyboard::S || e.key.code == sf::Keyboard::Down)
+        {
+            selected_ = (selected_ + 1) % (int)items_.size();
+        }
+        else if (e.key.code == sf::Keyboard::Enter)
+        {
+            cfg_.difficulty = (Difficulty)selected_;
+            sm_.push(std::make_unique<PlayState>(sm_, win_, cfg_, res_));
+        }
+        else if (e.key.code == sf::Keyboard::B || e.key.code == sf::Keyboard::Escape)
+        {
+            sm_.pop();
+        }
     }
 }
 
@@ -71,7 +72,7 @@ void DifficultyState::draw(sf::RenderTarget& rt)
     hint.setFont(font);
     hint.setCharacterSize(18);
     hint.setFillColor(sf::Color(200, 200, 200));
-    hint.setString("W/S - move    Enter - select    B - back");
+    hint.setString("W/S Up/Down - move    Enter - select    B/Esc - back");
     hint.setPosition(40.f, 88.f);
     rt.draw(hint);
 
