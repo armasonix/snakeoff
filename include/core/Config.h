@@ -48,4 +48,16 @@ public:
     Difficulty difficulty = Difficulty::D1;
 
     DifficultyParams paramsFor(Difficulty d) const;
+
+    // EPH: Ephemeral obstacles settings (temporary walls)
+    struct Ephemeral 
+    {
+        bool  enabled = false;
+        float visibleSec = 2.0f;
+        float hiddenSec = 1.0f;
+    } eph;
+
+    bool  ephemeralObstacles = false;
+    float ephemeralOnSec = 4.f;
+    float ephemeralOffSec = 4.f;
 };

@@ -7,6 +7,13 @@ SettingsState::SettingsState(StateMachine& sm, sf::RenderWindow& win, Config& cf
 {
     sfxMove_.setBuffer(res_.sfxUiMove());
     sfxHit_.setBuffer(res_.sfxUiHit());
+
+    items_ = 
+    {
+    {"Sound",  &cfg_.soundOn},
+    {"Music",&cfg_.musicOn},
+    {"Eph obstacles", &cfg_.ephemeralObstacles}
+    };
 }
 
 void SettingsState::onEnter() 
@@ -16,44 +23,56 @@ void SettingsState::onEnter()
 
 void SettingsState::toggleCurrent() 
 {
-    if (selected_ == Sound) 
+    switch (selected_)
     {
+    case Sound:
         cfg_.soundOn = !cfg_.soundOn;
         res_.setSoundEnabled(cfg_.soundOn);
-    }
-    else if (selected_ == Music)
-    {
+        break;
+    case Music:
         cfg_.musicOn = !cfg_.musicOn;
         res_.setMusicEnabled(cfg_.musicOn);
+        break;
+    case Eph:
+    default:
+        cfg_.ephemeralObstacles = !cfg_.ephemeralObstacles;
+        break;
     }
     cfg_.saveUserSettings("data/settings.cfg");
 }
 
+// EPH:
+std::string SettingsState::ephLabel() const 
+{
+    return std::string("Ephemeral obstacle: ") + (cfg_.eph.enabled ? "ON" : "OFF");
+}
+
 void SettingsState::handleEvent(const sf::Event& e) 
 {
-    if (e.type != sf::Event::KeyPressed) return;
-    switch (e.key.code) 
+    if (e.type == sf::Event::KeyPressed) 
     {
-    case sf::Keyboard::W:
-    case sf::Keyboard::Up:
-        selected_ = (selected_ - 1 + Count) % Count;
-        sfxMove_.play();
-        break;
-    case sf::Keyboard::S:
-    case sf::Keyboard::Down:
-        selected_ = (selected_ + 1) % Count;
-        sfxMove_.play();
-        break;
-    case sf::Keyboard::Enter:
-        toggleCurrent();
-        sfxHit_.play();
-        break;
-    case sf::Keyboard::B:
-    case sf::Keyboard::Escape:
-        sfxHit_.play();
-        sm_.pop();
-        break;
-    default: break;
+        const auto code = e.key.code;
+
+        if (code == sf::Keyboard::Up || code == sf::Keyboard::W) 
+        {
+            selected_ = (selected_ + (int)items_.size() - 1) % (int)items_.size();
+            sfxMove_.play();
+        }
+        if (code == sf::Keyboard::Down || code == sf::Keyboard::S) 
+        {
+            selected_ = (selected_ + 1) % (int)items_.size();
+            sfxMove_.play();
+        }
+        if (code == sf::Keyboard::Enter) 
+        {
+            toggleCurrent();
+            sfxHit_.play();
+        }
+        if (e.key.code == sf::Keyboard::B || code == sf::Keyboard::Escape)
+        {
+            sfxHit_.play();
+            sm_.pop(); // back to menu
+        }
     }
 }
 
@@ -87,4 +106,5 @@ void SettingsState::draw(sf::RenderTarget& rt)
 
     row("Sound", cfg_.soundOn, selected_ == Sound);
     row("Music", cfg_.musicOn, selected_ == Music);
+    row("Obstacles", cfg_.ephemeralObstacles, selected_ == Eph);
 }

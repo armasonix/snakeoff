@@ -4,6 +4,8 @@
 #include "core/Resources.h"
 #include "core/StateMachine.h"
 #include <SFML/Graphics.hpp>
+#include <vector>
+#include <string>
 
 class SettingsState : public IGameState 
 {
@@ -16,8 +18,18 @@ public:
     void draw(sf::RenderTarget& rt) override;
 
 private:
-    enum Sel { Sound = 0, Music = 1, Count = 2 };
+    enum Sel { Sound = 0, Music = 1, Eph = 2, Count = 3 };
     int selected_ = 0;
+
+    int ephemIdx_ = -1;
+    std::string ephemTitle() const;
+
+    struct Item 
+    {
+        const char* label;
+        bool* value;
+    };
+    std::vector<Item> items_;
 
     StateMachine& sm_;
     sf::RenderWindow& win_;
@@ -28,4 +40,7 @@ private:
 
     sf::Sound sfxMove_;
     sf::Sound sfxHit_;
+
+    // EPH:
+    std::string ephLabel() const;
 };

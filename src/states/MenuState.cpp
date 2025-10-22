@@ -40,8 +40,8 @@ void MenuState::handleEvent(const sf::Event& e)
     case sf::Keyboard::Enter:
         if (selected_ == 0) sm_.push(std::make_unique<PlayState>(sm_, win_, cfg_, res_));
         else if (selected_ == 1) sm_.push(std::make_unique<DifficultyState>(sm_, win_, cfg_, res_));
-        else if (selected_ == 2) sm_.push(std::make_unique<SettingsState>(sm_, win_, cfg_, res_));
-        else if (selected_ == 3) sm_.push(std::make_unique<HighScoresState>(sm_, win_, cfg_, res_));
+        else if (selected_ == 3) sm_.push(std::make_unique<SettingsState>(sm_, win_, cfg_, res_));
+        else if (selected_ == 2) sm_.push(std::make_unique<HighScoresState>(sm_, win_, cfg_, res_));
         else if (selected_ == 4) win_.close();
         sfxHit_.play();
         break;

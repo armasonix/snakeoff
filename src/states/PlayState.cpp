@@ -53,6 +53,12 @@ void PlayState::onEnter()
     auto obstacles = ProcGen::generate(level_.cols(), level_.rows(), start, g, rng);
     level_.applyObstacles(obstacles);
 
+    // EPH
+    ephObstacles_ = obstacles;
+    ephVisible_ = true;
+    ephTimer_ = 0.f;
+    level_.applyObstacles(ephObstacles_);
+
     spawnPortals(1);
     spawnApple();
     initialized_ = true;
@@ -235,6 +241,52 @@ void PlayState::update(float dt)
             shake_.start(0.12f, 2.0f);
         }
     }
+    // EPH: toggle visibility of temporary obstacles
+    if (cfg_.ephemeralObstacles) 
+    {
+        ephTimer_ += dt;
+        const float period = ephVisible_ ? cfg_.ephemeralOnSec : cfg_.ephemeralOffSec;
+
+        if (ephTimer_ >= period) 
+        {
+            ephTimer_ = 0.f;
+
+            if (ephVisible_) 
+            {
+                ephApplyHidden();
+                ephVisible_ = false;
+            }
+            else 
+            {
+                ephCells_.clear();
+
+                const int N = 6;
+                for (int i = 0; i < N; ++i) 
+                {
+                    auto c = Spawner::randomFreeCell(level_.grid(), snake_);
+                    if (std::find(ephCells_.begin(), ephCells_.end(), c) == ephCells_.end()) 
+                    {
+                        ephCells_.push_back(c);
+                    }
+                }
+                ephApplyVisible();
+                ephVisible_ = true;
+            }
+        }
+    }
+}
+
+// EPH
+void PlayState::ephApplyVisible()
+{
+    for (const auto& p : ephCells_)
+        level_.setCell(p.x, p.y, Cell::Solid); 
+}
+
+void PlayState::ephApplyHidden()
+{
+    for (const auto& p : ephCells_)
+        level_.setCell(p.x, p.y, Cell::Empty);
 }
 
 // h: [0..360), s/v: [0..1]

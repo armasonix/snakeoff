@@ -12,6 +12,8 @@
 #include <memory>
 #include <functional>
 #include "world/Portal.h"
+#include <vector>
+#include <algorithm>
 
 struct PlayContext;
 
@@ -63,6 +65,16 @@ private:
     void die();
 
     bool initialized_ = false;
+
+    // EPH: cache of generated obstacles, and toggle state
+    std::vector<sf::Vector2i> ephObstacles_;
+    std::vector<Vec2i> ephCells_;
+    bool   ephVisible_{ true };
+    float  ephTimer_{ 0.f };
+
+    // EPH: helpers to apply/hide without regenerating
+    void ephApplyVisible();
+    void ephApplyHidden();
 
     std::vector<PortalPair> portals_;
     Vec2i portalLockCell_{ -9999, -9999 }; // cell-lock
