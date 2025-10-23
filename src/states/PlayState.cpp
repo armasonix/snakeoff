@@ -3,6 +3,7 @@
 #include "systems/Collision.h"
 #include "states/PauseState.h"
 #include "states/GameOverState.h"
+#include "entities/Powerup.h"
 #include "core/StateMachine.h"
 #include "world/ProcGen.h"
 #include <SFML/Graphics.hpp>
@@ -144,6 +145,14 @@ void PlayState::update(float dt)
     shake_.update(dt);
     snake_.update(dt);
 
+    if (breakerTimer_ > 0.f)
+    {
+        breakerTimer_ -= dt;
+        if (breakerTimer_ < 0.f) breakerTimer_ = 0.f;
+    }
+
+    if (powerup_) powerup_->update(dt);
+
     confuseHueT_ += dt;
     if (confuseVisT_ > 0.f) confuseVisT_ -= dt;
 
@@ -169,6 +178,15 @@ void PlayState::update(float dt)
     {
         timeAcc_ -= step;
         snake_.step();
+
+        Vec2i next = snake_.head();
+        switch (snake_.direction()) 
+{
+        case Direction::Up:    --next.y; break;
+        case Direction::Down:  ++next.y; break;
+        case Direction::Left:  --next.x; break;
+        case Direction::Right: ++next.x; break;
+        }
 
         // portals
         {
@@ -203,6 +221,11 @@ void PlayState::update(float dt)
                 if (h.x != portalLockCell_.x || h.y != portalLockCell_.y)
                     portalLockCell_ = Vec2i(-9999, -9999);
             }
+        }
+
+        if (breakerTimer_ > 0.f && level_.isBlocked(next.x, next.y))
+        {
+            level_.setCell(next.x, next.y, Cell::Empty);
         }
 
         // death
@@ -240,6 +263,12 @@ void PlayState::update(float dt)
             spawnApple();
             shake_.start(0.12f, 2.0f);
         }
+
+        if (powerup_ && powerup_->alive && powerup_->cell == snake_.head())
+        {
+            powerup_->alive = false;
+            breakerTimer_ = std::max(breakerTimer_, 6.f);
+        }
     }
     // EPH: toggle visibility of temporary obstacles
     if (cfg_.ephemeralObstacles) 
@@ -272,6 +301,16 @@ void PlayState::update(float dt)
                 ephApplyVisible();
                 ephVisible_ = true;
             }
+        }
+    }
+
+    if ((!powerup_) || !powerup_->alive)
+    {
+        if (rng_() < 0.015f)
+        {
+            Vec2i c = spawner_.randomFreeCell(level_.grid(), snake_);
+            if (!powerup_) powerup_ = std::make_unique<Powerup>();
+            powerup_->spawn(c, PowerupKind::Breaker, 20.f, cfg_.cellPx);
         }
     }
 }
@@ -375,6 +414,11 @@ void PlayState::draw(sf::RenderTarget& rt)
         sf::Color outCol(p.color.r / 2, p.color.g / 2, p.color.b / 2);
         drawCellFilled(p.b, sf::Color(outCol.r, outCol.g, outCol.b, 160));
         drawPulsingCircle(p.b, outCol, /*darker=*/true);
+    }
+
+    if (powerup_ && powerup_->alive)
+    {
+        powerup_->draw(rt, CELL);
     }
 
     if (apple_) apple_->draw(rt);

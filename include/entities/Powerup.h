@@ -1,41 +1,28 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "util/Types.h"
+#include "math/Vec2.h"
 
 enum class PowerupKind { Breaker };
 
-class Powerup 
+struct Powerup
 {
-public:
-    Powerup(const Vec2i& cell, float ttlSec, int cellPx)
-        : kind_(PowerupKind::Breaker), cell_(cell), ttl_(ttlSec), cellPx_(cellPx) 
-    {
-        shape_.setRadius(cellPx * 0.4f);
-        shape_.setOrigin(shape_.getRadius(), shape_.getRadius());
-        shape_.setFillColor(sf::Color(255, 200, 50, 220));
-        syncShape();
-    }
+    PowerupKind kind{ PowerupKind::Breaker };
+    bool  alive{ false };
+    Vec2i cell{};          // cell on grid
+    float ttlSec{ 0.f };   // ttl
 
-    void update(float dt) { if (ttl_ > 0.f) ttl_ -= dt; }
-    bool alive() const { return ttl_ > 0.f; }
-    Vec2i cell() const { return cell_; }
+    // spawn/respawn
+    void spawn(const Vec2i& c, PowerupKind k, float ttl, int cellPx);
 
-    void draw(sf::RenderTarget& rt, const sf::View& view) const 
-    {
-        (void)view;
-        rt.draw(shape_);
-    }
+    // tick
+    void update(float dt);
+
+    // draw
+    void draw(sf::RenderTarget& rt, int cellPx) const;
 
 private:
-    void syncShape() 
-    {
-        shape_.setPosition(float(cell_.x * cellPx_ + cellPx_ / 2),
-            float(cell_.y * cellPx_ + cellPx_ / 2));
-    }
+    mutable sf::RectangleShape shape_;
+    int cellPx_{ 24 };
 
-    PowerupKind kind_;
-    Vec2i  cell_;
-    float  ttl_{};
-    int    cellPx_{};
-    sf::CircleShape shape_;
+    void syncShape() const; // position shape_ from cell/cellPx_
 };

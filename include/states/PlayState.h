@@ -5,11 +5,14 @@
 #include "world/Level.h"
 #include "entities/Snake.h"
 #include "entities/Apple.h"
+#include "entities/Powerup.h"
 #include "systems/Score.h"
+#include "systems/Spawner.h"
 #include "ui/HUD.h"
 #include "vfx/CameraShake.h"
 #include "systems/Effects.h"
 #include <memory>
+#include <random>
 #include <functional>
 #include "world/Portal.h"
 #include <vector>
@@ -65,12 +68,18 @@ private:
     void die();
 
     bool initialized_ = false;
+    std::mt19937 rng_{ std::random_device{}() };
+    Spawner spawner_;
+
+    std::unique_ptr<Powerup> powerup_; 
+    float breakerTimer_ = 0.f;
 
     // EPH: cache of generated obstacles, and toggle state
     std::vector<sf::Vector2i> ephObstacles_;
+    std::vector<sf::Vector2i> tempObstacles_;
     std::vector<Vec2i> ephCells_;
-    bool   ephVisible_{ true };
-    float  ephTimer_{ 0.f };
+    bool   ephVisible_ = true;
+    float  ephTimer_ = 0.f;
 
     // EPH: helpers to apply/hide without regenerating
     void ephApplyVisible();
