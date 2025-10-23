@@ -144,14 +144,20 @@ void PlayState::update(float dt)
     effects_.update(dt);
     shake_.update(dt);
     snake_.update(dt);
+    snake_.tickBreaker(dt);
 
-    if (breakerTimer_ > 0.f)
+    puSpawnCooldown_ -= dt;
+    if (puSpawnCooldown_ <= 0.f) 
     {
-        breakerTimer_ -= dt;
-        if (breakerTimer_ < 0.f) breakerTimer_ = 0.f;
+        spawnBreakerPU();
+        std::uniform_real_distribution<float> dist(puSpawnMin_, puSpawnMax_);
+        static std::mt19937 rng{ std::random_device{}() };
+        puSpawnCooldown_ = dist(rng);
     }
 
-    if (powerup_) powerup_->update(dt);
+    for (auto& p : powerups_) p.ttl -= dt;
+    powerups_.erase(std::remove_if(powerups_.begin(), powerups_.end(),
+        [](const PowerUp& p) { return p.ttl <= 0.f; }), powerups_.end());
 
     confuseHueT_ += dt;
     if (confuseVisT_ > 0.f) confuseVisT_ -= dt;
@@ -223,9 +229,13 @@ void PlayState::update(float dt)
             }
         }
 
-        if (breakerTimer_ > 0.f && level_.isBlocked(next.x, next.y))
+        const Vec2i h = snake_.head();
+        if (level_.grid().isObstacle(h.x, h.y) && snake_.canBreakObstacles()) 
         {
-            level_.setCell(next.x, next.y, Cell::Empty);
+            if (!level_.grid().isBorder(h.x, h.y)) 
+            {
+                level_.grid().destroyObstacle(h.x, h.y);
+            }
         }
 
         // death
@@ -264,10 +274,20 @@ void PlayState::update(float dt)
             shake_.start(0.12f, 2.0f);
         }
 
-        if (powerup_ && powerup_->alive && powerup_->cell == snake_.head())
+        const auto head = snake_.head();
+
+        for (size_t i = 0; i < powerups_.size(); ++i) 
         {
-            powerup_->alive = false;
-            breakerTimer_ = std::max(breakerTimer_, 6.f);
+            const auto& p = powerups_[i];
+            if (p.cellX == head.x && p.cellY == head.y) 
+            {
+                if (p.kind == PowerUpKind::Breaker) 
+                {
+                    snake_.enableBreaker(3.0f);
+                }
+                powerups_.erase(powerups_.begin() + i);
+                break;
+            }
         }
     }
     // EPH: toggle visibility of temporary obstacles
@@ -303,15 +323,41 @@ void PlayState::update(float dt)
             }
         }
     }
+}
 
-    if ((!powerup_) || !powerup_->alive)
+bool PlayState::isCellFree(int x, int y) const
+{
+    if (level_.isBlocked(x, y)) return false;
+
+    if (apple_ && apple_->cell().x == x && apple_->cell().y == y) return false;
+
+    for (const auto& c : snake_.body())
+        if (c.x == x && c.y == y) return false;
+
+    size_t idx; bool isA; if (isPortalCell({x,y}, &idx, &isA)) return false;
+
+    return true;
+}
+
+void PlayState::spawnBreakerPU()
+{
+    static std::mt19937 rng{ std::random_device{}() };
+    const int W = level_.grid().w();
+    const int H = level_.grid().h();
+
+    for (int i = 0; i < 40; ++i) 
     {
-        if (rng_() < 0.015f)
-        {
-            Vec2i c = spawner_.randomFreeCell(level_.grid(), snake_);
-            if (!powerup_) powerup_ = std::make_unique<Powerup>();
-            powerup_->spawn(c, PowerupKind::Breaker, 20.f, cfg_.cellPx);
-        }
+        int x = std::uniform_int_distribution<int>(0, W - 1)(rng);
+        int y = std::uniform_int_distribution<int>(0, H - 1)(rng);
+        if (!isCellFree(x, y)) continue;
+
+        PowerUp pu;
+        pu.cellX = x;
+        pu.cellY = y;
+        pu.kind = PowerUpKind::Breaker;
+        pu.ttl = 12.f;
+        powerups_.push_back(pu);
+        break;
     }
 }
 
@@ -416,11 +462,6 @@ void PlayState::draw(sf::RenderTarget& rt)
         drawPulsingCircle(p.b, outCol, /*darker=*/true);
     }
 
-    if (powerup_ && powerup_->alive)
-    {
-        powerup_->draw(rt, CELL);
-    }
-
     if (apple_) apple_->draw(rt);
     snake_.draw(rt);
 
@@ -481,6 +522,19 @@ void PlayState::draw(sf::RenderTarget& rt)
                 rt.draw(bar);
             }
         }
+    }
+
+    for (const auto& p : powerups_) 
+    {
+        const float r = (cfg_.cellPx * 0.7f) * 0.5f;
+        sf::CircleShape s(r);
+        s.setOrigin(r, r);
+        s.setPosition(p.cellX * cfg_.cellPx + cfg_.cellPx * 0.5f,
+            p.cellY * cfg_.cellPx + cfg_.cellPx * 0.5f);
+        s.setFillColor(sf::Color(255, 215, 0));
+        s.setOutlineThickness(2.f);
+        s.setOutlineColor(sf::Color::Black);
+        rt.draw(s);
     }
 
     // returns base cam — HUD draws by coords

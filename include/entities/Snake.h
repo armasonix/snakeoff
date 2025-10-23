@@ -29,9 +29,33 @@ public:
 
     void teleportHead(const Vec2i& cell);
 
+    bool canBreakObstacles() const noexcept { return breakObstacles_; }
+    void enableBreaker(float seconds) noexcept 
+    {
+        breakerTTL_ = std::max(breakerTTL_, seconds);
+        breakObstacles_ = true;
+    }
+
+    float breakerTimeLeft() const noexcept { return breakerTTL_; }
+
+    void tickBreaker(float dt) noexcept 
+    {
+        if (breakerTTL_ > 0.f) 
+        {
+            breakerTTL_ -= dt;
+            if (breakerTTL_ <= 0.f) 
+            {
+                breakerTTL_ = 0.f;
+                breakObstacles_ = false;
+            }
+        }
+    }
+
 private:
     std::deque<Vec2i> body_;
     Direction dir_{ Direction::Right };
     int growth_{ 0 };
     float flashTimer_{ 0.f }; // flicker
+    bool breakObstacles_{ false };
+    float breakerTTL_{ 0.f };
 };

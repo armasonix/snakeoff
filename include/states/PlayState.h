@@ -38,6 +38,12 @@ public:
 
     void flashSnake();
 
+    std::vector<PowerUp> powerups_;
+    float puSpawnCooldown_{ 5.f };
+    float puSpawnMin_{ 6.f }, puSpawnMax_{ 12.f };
+    bool isCellFree(int x, int y) const;
+    void spawnBreakerPU();
+
 private:
     StateMachine& sm_;
     sf::RenderWindow& win_;
@@ -70,9 +76,6 @@ private:
     bool initialized_ = false;
     std::mt19937 rng_{ std::random_device{}() };
     Spawner spawner_;
-
-    std::unique_ptr<Powerup> powerup_; 
-    float breakerTimer_ = 0.f;
 
     // EPH: cache of generated obstacles, and toggle state
     std::vector<sf::Vector2i> ephObstacles_;

@@ -26,6 +26,7 @@
 				"E:/SnakeOff/SnakeOff/src/ui/HUD.cpp",
 				"E:/SnakeOff/SnakeOff/src/util/Random.cpp",
 				"E:/SnakeOff/SnakeOff/src/vfx/CameraShake.cpp",
+				"E:/SnakeOff/SnakeOff/src/world/Grid.cpp",
 				"E:/SnakeOff/SnakeOff/src/world/Level.cpp",
 				"E:/SnakeOff/SnakeOff/src/world/ProcGen.cpp"
 			],

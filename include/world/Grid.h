@@ -15,6 +15,14 @@ public:
     CellType get(const Vec2i& c) const { return data_[c.y * w_ + c.x]; }
     void set(const Vec2i& c, CellType t) { data_[c.y * w_ + c.x] = t; }
 
+    bool isObstacle(int x, int y) const;
+    bool destroyObstacle(int x, int y);
+
+    bool isBorder(int x, int y) const noexcept 
+    {
+        return (x == 0) || (y == 0) || (x == w() - 1) || (y == h() - 1);
+    }
+
 private:
     int w_, h_;
     std::vector<CellType> data_;
