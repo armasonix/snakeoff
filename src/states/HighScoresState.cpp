@@ -30,25 +30,43 @@ void HighScoresState::handleEvent(const sf::Event& e)
 
 void HighScoresState::draw(sf::RenderTarget& rt) 
 {
-    sf::Text title("High Scores", res_.font(), 28);
-    title.setPosition(60, 40);
+    auto prev = rt.getView();
+    rt.setView(rt.getDefaultView());
+
+    const sf::Vector2f center = win_.getView().getCenter();
+    const float cx = std::floor(center.x);
+    
+    sf::Text title("High Scores", res_.font(), 40);
     title.setFillColor(sf::Color::White);
-    rt.draw(title);
+    {
+        const auto b = title.getLocalBounds();
+        title.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+        title.setPosition(cx, std::floor(center.y - 160.f));
+        rt.draw(title);
+    }
 
     auto list = hs_.topN((size_t)cfg_.tableRowsY);
-    sf::Text row("", res_.font(), 22);
-    float y = 90.f;
+    sf::Text row("", res_.font(), 24);
+    const float startY = std::floor(center.y - 80.f);
+    const float step = 32.f;
     for (size_t i = 0; i < list.size(); ++i) 
     {
-        row.setPosition(60, y);
-        row.setString(std::to_string((int)i + 1) + ". " + list[i].name + " — " + std::to_string(list[i].score));
+        row.setString(std::to_string((int)i + 1) + ". " + list[i].name + "  >  " + std::to_string(list[i].score));
         row.setFillColor(sf::Color::Green);
+        const auto rb = row.getLocalBounds();
+        row.setOrigin(rb.left + rb.width * 0.5f, rb.top + rb.height * 0.5f);
+        row.setPosition(cx, std::floor(startY + (float)i * step));
         rt.draw(row);
-        y += 28.f;
     }
 
     sf::Text hint("Enter/B or Esc - back", res_.font(), 18);
-    hint.setPosition(60, y + 20.f);
     hint.setFillColor(sf::Color(180, 180, 180));
-    rt.draw(hint);
+    {
+        const auto hb = hint.getLocalBounds();
+        hint.setOrigin(hb.left + hb.width * 0.5f, hb.top + hb.height * 0.5f);
+        hint.setPosition(cx, std::floor(startY + (float)list.size() * step + 40.f));
+        rt.draw(hint);
+    }
+    
+    rt.setView(prev);
 }

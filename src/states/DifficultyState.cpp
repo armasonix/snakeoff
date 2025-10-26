@@ -69,7 +69,7 @@ void DifficultyState::draw(sf::RenderTarget& rt)
     title.setFont(font);
     title.setCharacterSize(36);
     title.setFillColor(sf::Color::White);
-    title.setString("Difficulty select");
+    title.setString("Select Your Difficulty");
     title.setPosition(40.f, 40.f);
     rt.draw(title);
 

@@ -14,7 +14,7 @@ public:
 
     void onEnter() override;
     void handleEvent(const sf::Event& e) override;
-    void update(float) override {}
+    void update(float dt) override;
     void draw(sf::RenderTarget& rt) override;
 
 private:
@@ -42,4 +42,7 @@ private:
 
     sf::Sound sfxMove_;
     sf::Sound sfxHit_;
+
+    float titleHue_{ 0.f };
+    float titleHueSpeed_{ 60.f };
 };

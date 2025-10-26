@@ -99,12 +99,14 @@ bool Resources::load(const std::string& assetsDir)
     font_ = std::make_unique<sf::Font>();
     eat_ = std::make_unique<sf::SoundBuffer>();
     death_ = std::make_unique<sf::SoundBuffer>();
+    win_ = std::make_unique<sf::SoundBuffer>();
     sfxUiHitBuf_ = std::make_unique<sf::SoundBuffer>();
     sfxUiMoveBuf_ = std::make_unique<sf::SoundBuffer>();
 
     const std::string fontPath = assetsDir + "/fonts/Roboto-Regular.ttf";
     const std::string eatPath = assetsDir + "/sfx/apple.wav";
     const std::string losePath = assetsDir + "/sfx/lose.wav";
+    const std::string winPath = assetsDir + "/sfx/win.wav";
     const std::string sfxuihitPath = assetsDir + "/sfx/menu_select.wav";
     const std::string sfxuimovePath = assetsDir + "/sfx/hit.wav";
 
@@ -113,6 +115,7 @@ bool Resources::load(const std::string& assetsDir)
     ok &= ensureExists(fontPath, "font");
     ok &= ensureExists(eatPath, "sound");
     ok &= ensureExists(losePath, "sound");
+    ok &= ensureExists(winPath, "sound");
     ok &= ensureExists(sfxuihitPath, "sound");
     ok &= ensureExists(sfxuimovePath, "sound");
     if (!ok) 
@@ -135,6 +138,11 @@ bool Resources::load(const std::string& assetsDir)
     if (!death_->loadFromFile(losePath)) 
     {
         std::cerr << "[RES] SFML failed to load sound: " << losePath << "\n";
+        ok = false;
+    }
+    if (!win_->loadFromFile(winPath))
+    {
+        std::cerr << "[RES] SFML failed to load sound: " << winPath << "\n";
         ok = false;
     }
     if (!sfxUiHitBuf_->loadFromFile(sfxuihitPath))

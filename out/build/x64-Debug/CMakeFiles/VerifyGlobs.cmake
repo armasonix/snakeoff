@@ -21,6 +21,7 @@ set(OLD_GLOB
   "E:/SnakeOff/SnakeOff/src/states/PauseState.cpp"
   "E:/SnakeOff/SnakeOff/src/states/PlayState.cpp"
   "E:/SnakeOff/SnakeOff/src/states/SettingsState.cpp"
+  "E:/SnakeOff/SnakeOff/src/states/VictoryState.cpp"
   "E:/SnakeOff/SnakeOff/src/systems/HighScores.cpp"
   "E:/SnakeOff/SnakeOff/src/systems/Spawner.cpp"
   "E:/SnakeOff/SnakeOff/src/ui/HUD.cpp"

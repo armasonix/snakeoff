@@ -2,7 +2,8 @@
 #include "states/IGameState.h"
 #include <vector>
 #include <string>
-#include <SFML/Audio.hpp> 
+#include <SFML/Audio.hpp>
+#include <cmath>
 
 class MenuState : public IGameState 
 {
@@ -25,4 +26,8 @@ private:
 
     sf::Sound sfxMove_;
     sf::Sound sfxHit_;
+
+    sf::Text titleText_;
+    float titleHue_{ 0.f };
+    float titleHueSpeed_{ 60.f };
 };

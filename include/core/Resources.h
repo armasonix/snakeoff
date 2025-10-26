@@ -15,6 +15,7 @@ public:
     const sf::Font& font() const { return *font_; }
     const sf::SoundBuffer& sfxEat() const { return *eat_; }
     const sf::SoundBuffer& sfxDeath() const { return *death_; }
+    const sf::SoundBuffer& sfxWin() const { return *win_; }
     const sf::SoundBuffer& sfxUiMove() const { return *sfxUiMoveBuf_; }
     const sf::SoundBuffer& sfxUiHit()  const { return *sfxUiHitBuf_; }
 
@@ -39,7 +40,7 @@ public:
 
 private:
     std::unique_ptr<sf::Font> font_;
-    std::unique_ptr<sf::SoundBuffer> eat_, death_, sfxUiMoveBuf_, sfxUiHitBuf_;
+    std::unique_ptr<sf::SoundBuffer> eat_, death_, sfxUiMoveBuf_, sfxUiHitBuf_, win_;
 
     bool soundOn_ = true;
     bool musicOn_ = true;

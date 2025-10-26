@@ -5,6 +5,7 @@
 #include "systems/HighScores.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
+#include <cmath>
 
 class HighScoresState : public IGameState 
 {
