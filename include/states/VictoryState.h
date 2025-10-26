@@ -5,8 +5,8 @@
 #include "core/Resources.h"
 #include "core/StateMachine.h"
 #include <SFML/Graphics.hpp>
-#include <functional>
 #include <memory>
+#include <functional>
 
 class VictoryState : public IGameState 
 {
@@ -16,9 +16,11 @@ public:
 		 : sm_(sm), win_(win), cfg_(cfg), res_(res),
 		levelIndex_(levelIndex), scoreValue_(scoreValue), onContinue_(std::move(onContinue)) 
 	{
-			dim_.setSize({ (float)win_.getSize().x, (float)win_.getSize().y });
+		res_.switchToGameOver();
+
+		dim_.setSize({ (float)win_.getSize().x, (float)win_.getSize().y });
 		dim_.setFillColor(sf::Color::Black);
-			panel_.setSize({ 380.f, 220.f });
+		panel_.setSize({ 380.f, 220.f });
 		panel_.setOrigin(panel_.getSize() * 0.5f);
 		panel_.setFillColor(sf::Color::Black);
 		panel_.setOutlineThickness(2.f);
@@ -69,16 +71,19 @@ public:
 			case sf::Keyboard::Space:
 				if (sel_ == 0) 
 				{
+					res_.ensureSessionLoop();
 					if (onContinue_) onContinue_();
 					sm_.pop();
 				}
 				else 
 				{
+					sm_.pop();
 					sm_.push(std::make_unique<GameOverState>(sm_, win_, cfg_, res_, scoreValue_));
 					res_.switchToGameOver();
 				}
 				break;
 			case sf::Keyboard::Escape:
+				sm_.pop();
 				sm_.push(std::make_unique<GameOverState>(sm_, win_, cfg_, res_, scoreValue_));
 				res_.switchToGameOver();
 				break;
@@ -99,8 +104,11 @@ public:
 		btnNextText_.setPosition(btnNext_.getPosition() + sf::Vector2f(-70.f, -14.f));
 		btnMenuText_.setPosition(btnMenu_.getPosition() + sf::Vector2f(-35.f, -14.f));
 
+		const sf::Color kMenuGreen(120, 220, 120);
 		btnNext_.setOutlineColor(sel_ == 0 ? sf::Color::White : sf::Color(60, 60, 60));
 		btnMenu_.setOutlineColor(sel_ == 1 ? sf::Color::White : sf::Color(60, 60, 60));
+		btnNext_.setFillColor(sel_ == 0 ? kMenuGreen : sf::Color::Black);
+		btnMenu_.setFillColor(sel_ == 1 ? kMenuGreen : sf::Color::Black);
 		btnNextText_.setStyle(sel_ == 0 ? sf::Text::Bold : sf::Text::Regular);
 		btnMenuText_.setStyle(sel_ == 1 ? sf::Text::Bold : sf::Text::Regular);
 		// render
