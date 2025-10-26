@@ -115,6 +115,11 @@ private:
     sf::RectangleShape gateViz_;
     float gatePulse_{ 0.f };
 
+    // Stage overlay (STAGE 1/2/3)
+    sf::Text stageText_;
+    float stageTimer_{ 0.f };
+    void  showStageBanner();
+
     // helpers
     void  maybeUnlockGate(); // open gate check
     bool  isBorderNonCorner(int x, int y) const;

@@ -79,6 +79,7 @@ void PlayState::onEnter()
 
     spawnPortals(1);
     spawnApple();
+    showStageBanner();
     initialized_ = true;
 
     scoreAtLevelStart_ = score_.value();
@@ -216,6 +217,17 @@ bool PlayState::isPortalCell(const Vec2i& c, size_t* outPairIdx, bool* isA) cons
     return false;
 }
 
+void PlayState::showStageBanner()
+{
+    stageTimer_ = 1.0f;
+    stageText_.setFont(res_.font());
+    stageText_.setString(L"STAGE " + std::to_wstring(levelIndex_));
+    stageText_.setCharacterSize(72);
+    stageText_.setFillColor(sf::Color::White);
+    stageText_.setOutlineThickness(2.f);
+    stageText_.setOutlineColor(sf::Color::Black);
+}
+
 void PlayState::handleEvent(const sf::Event& e)
 {
     // game input
@@ -267,6 +279,13 @@ void PlayState::update(float dt)
         std::uniform_real_distribution<float> dist(puSpawnMin_, puSpawnMax_);
         static std::mt19937 rng{ std::random_device{}() };
         puSpawnCooldown_ = dist(rng);
+    }
+
+    // Stage overlay timer
+    if (stageTimer_ > 0.f) 
+    {
+       stageTimer_ -= dt;
+       if (stageTimer_ < 0.f) stageTimer_ = 0.f;
     }
 
     for (auto& p : powerups_) p.ttl -= dt;
@@ -730,6 +749,30 @@ void PlayState::draw(sf::RenderTarget& rt)
         s.setOutlineThickness(2.f);
         s.setOutlineColor(sf::Color::Black);
         rt.draw(s);
+    }
+
+    // STAGE overlay
+    if (stageTimer_ > 0.f) 
+    {
+       auto prevUI = rt.getView();
+       rt.setView(rt.getDefaultView());
+  
+       const float kTotal = 2.0f;
+       float t = std::max(0.f, std::min(stageTimer_, kTotal)) / kTotal;
+       sf::Color fill = stageText_.getFillColor();
+       fill.a = static_cast<sf::Uint8>(std::round(255.f * t));
+       sf::Color out = stageText_.getOutlineColor();
+       out.a = fill.a;
+       stageText_.setFillColor(fill);
+       stageText_.setOutlineColor(out);
+
+       const sf::Vector2f center = win_.getView().getCenter();
+       const auto b = stageText_.getLocalBounds();
+       stageText_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+       stageText_.setPosition(std::floor(center.x), std::floor(center.y - 120.f));
+
+       rt.draw(stageText_);
+       rt.setView(prevUI);
     }
 
     // returns base cam — HUD draws by coords
