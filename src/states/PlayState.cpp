@@ -3,12 +3,14 @@
 #include "systems/Collision.h"
 #include "states/PauseState.h"
 #include "states/GameOverState.h"
+#include "states/VictoryState.h"
 #include "entities/Powerup.h"
 #include "core/StateMachine.h"
 #include "world/ProcGen.h"
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <algorithm>
+#include <cstdio> 
 #include <cmath>
 
 PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
@@ -54,6 +56,21 @@ void PlayState::onEnter()
     auto obstacles = ProcGen::generate(level_.cols(), level_.rows(), start, g, rng);
     level_.applyObstacles(obstacles);
 
+    //Breaker
+    brText_.setCharacterSize(std::max(14, int(cfg_.cellPx * 0.6f)));
+    brText_.setFillColor(sf::Color::White);
+    brText_.setOutlineColor(sf::Color(0, 0, 0, 200));
+    brText_.setOutlineThickness(2.f);
+    brText_.setPosition(brPos_.x, brPos_.y - 20.f);
+    brBack_.setSize(brSize_);
+    brBack_.setPosition(brPos_);
+    brBack_.setFillColor(sf::Color(0, 0, 0, 120));
+    brBack_.setOutlineThickness(1.f);
+    brBack_.setOutlineColor(sf::Color(255, 255, 255, 180));
+    brFill_.setSize({ 0.f, brSize_.y });
+    brFill_.setPosition(brPos_);
+    brFill_.setFillColor(sf::Color(50, 205, 50));
+
     // EPH
     ephObstacles_ = obstacles;
     ephVisible_ = true;
@@ -63,6 +80,100 @@ void PlayState::onEnter()
     spawnPortals(1);
     spawnApple();
     initialized_ = true;
+
+    scoreAtLevelStart_ = score_.value();
+    gateUnlocked_ = false;
+    gateCell_ = Vec2i(-1, -1);
+}
+
+bool PlayState::isBorderNonCorner(int x, int y) const
+{
+    const int W = level_.cols();
+    const int H = level_.rows();
+    const bool border = (x == 0 || y == 0 || x == W - 1 || y == H - 1);
+    const bool corner = ((x == 0 || x == W - 1) && (y == 0 || y == H - 1));
+    return border && !corner;
+}
+
+void PlayState::clearGate()
+{
+    if (gateUnlocked_ && level_.grid().inside(gateCell_)) {}
+    gateUnlocked_ = false;
+    gateCell_ = Vec2i(-1, -1);
+}
+
+void PlayState::unlockGate()
+{
+    const int W = level_.cols();
+    const int H = level_.rows();
+
+    // trying seeking borders (non corners)
+    for (int guard = 0; guard < 100; ++guard) 
+    {
+        int side = std::uniform_int_distribution<int>(0, 3)(rng_); // 0:top,1:bottom,2:left,3:right
+        Vec2i c;
+        if (side == 0) { c = Vec2i(std::uniform_int_distribution<int>(1, W - 2)(rng_), 0); }
+        else if (side == 1) { c = Vec2i(std::uniform_int_distribution<int>(1, W - 2)(rng_), H - 1); }
+        else if (side == 2) { c = Vec2i(0, std::uniform_int_distribution<int>(1, H - 2)(rng_)); }
+        else { c = Vec2i(W - 1, std::uniform_int_distribution<int>(1, H - 2)(rng_)); }
+
+        if (!isBorderNonCorner(c.x, c.y)) continue;
+        if (!level_.grid().isObstacle(c.x, c.y)) continue;
+
+        // open gates
+        level_.grid().destroyObstacle(c.x, c.y); // turn to Empty
+        gateCell_ = c;
+        gateUnlocked_ = true;
+
+        gateViz_.setSize(sf::Vector2f((float)cfg_.cellPx, (float)cfg_.cellPx));
+        gateViz_.setOrigin(gateViz_.getSize() * 0.5f);
+        gateViz_.setPosition(c.x * cfg_.cellPx + cfg_.cellPx * 0.5f,
+                             c.y * cfg_.cellPx + cfg_.cellPx * 0.5f);
+        gateViz_.setFillColor(sf::Color(120, 220, 120, 220));
+        gateViz_.setOutlineThickness(2.f);
+        gateViz_.setOutlineColor(sf::Color::Black);
+        gatePulse_ = 0.f;
+        break;
+    }
+}
+
+void PlayState::maybeUnlockGate()
+{
+    if (gateUnlocked_) return;
+    const int gained = score_.value() - scoreAtLevelStart_;
+    if (gained >= levelTarget()) 
+    {
+        unlockGate();
+    }
+}
+
+void PlayState::startLevel(int idx)
+{
+    levelIndex_ = std::clamp(idx, 1, 3);
+    cfg_.difficulty = static_cast<Difficulty>(std::clamp(levelIndex_, 1, 5));
+
+    // replace base score checkpoint at start level
+    scoreAtLevelStart_ = score_.value();
+
+    // full reset game state
+    initialized_ = false;
+    level_.clear();
+    clearGate();  // close gate
+    portals_.clear();
+    powerups_.clear();
+    apple_.reset();
+    effects_.reset();
+    timeAcc_ = 0.f;
+    startDelay_ = 0.35f; // start delay
+
+    // snake reset
+    const int cx = level_.grid().w() / 2;
+    const int cy = level_.grid().h() / 2;
+    snake_ = Snake({ cx, cy });
+
+    win_.setView(win_.getDefaultView());
+
+    onEnter(); // generate new level/apples/portals
 }
 
 void PlayState::spawnPortals(int pairs)
@@ -105,14 +216,16 @@ bool PlayState::isPortalCell(const Vec2i& c, size_t* outPairIdx, bool* isA) cons
     return false;
 }
 
-void PlayState::handleEvent(const sf::Event& e) 
+void PlayState::handleEvent(const sf::Event& e)
 {
+    // game input
     if (e.type == sf::Event::KeyPressed)
     {
         auto key = e.key.code;
-        if (effects_.inverted())
+
+        if (effects_.inverted()) 
         {
-            // invert W<->S, A<->D
+            // control inverting
             if (key == sf::Keyboard::W)          key = sf::Keyboard::S;
             else if (key == sf::Keyboard::S)     key = sf::Keyboard::W;
             else if (key == sf::Keyboard::A)     key = sf::Keyboard::D;
@@ -132,7 +245,7 @@ void PlayState::handleEvent(const sf::Event& e)
         if (key == sf::Keyboard::D || key == sf::Keyboard::Right)
             snake_.setDirection(Direction::Right);
 
-        if (key == sf::Keyboard::P)
+        if (key == sf::Keyboard::P) 
         {
             sm_.push(std::make_unique<PauseState>(sm_, res_));
         }
@@ -145,6 +258,7 @@ void PlayState::update(float dt)
     shake_.update(dt);
     snake_.update(dt);
     snake_.tickBreaker(dt);
+    maybeUnlockGate();
 
     puSpawnCooldown_ -= dt;
     if (puSpawnCooldown_ <= 0.f) 
@@ -178,6 +292,49 @@ void PlayState::update(float dt)
 
     timeAcc_ += dtEffective;
     portalPulseT_ += dt;
+
+    const float left = snake_.breakerTimeLeft();
+    if (left > 0.f) 
+    {
+        // progressbar
+        const float frac = std::clamp(left / brUiMaxSec_, 0.f, 1.f);
+        brFill_.setSize({ brSize_.x * frac, brSize_.y });
+
+        brUiUpdateThrottle_ -= dt;
+        if (brUiUpdateThrottle_ <= 0.f) 
+        {
+            brUiUpdateThrottle_ = 0.1f;
+            char buf[32];
+            std::snprintf(buf, sizeof(buf), "Breaker: %.1fs", left);
+            brText_.setString(buf);
+        }
+        // flick
+        if (left <= 1.0f) 
+        {
+            float pulse = 0.5f * (1.f + std::sin(2.f * 3.1415926f * 5.f * left));
+            sf::Uint8 a = static_cast<sf::Uint8>(120 + 135 * pulse);
+            auto fill = brFill_.getFillColor();
+            fill.a = a;
+            brFill_.setFillColor(fill);
+            auto txt = brText_.getFillColor();
+            txt.a = a;
+            brText_.setFillColor(txt);
+        }
+        else 
+        {
+            auto fill = brFill_.getFillColor();
+            fill.a = 255;
+            brFill_.setFillColor(fill);
+            auto txt = brText_.getFillColor();
+            txt.a = 255;
+            brText_.setFillColor(txt);
+        }
+    }
+    else 
+    {
+        brFill_.setSize({ 0.f, brSize_.y });
+        brText_.setString("");
+    }
 
     const float step = cfg_.paramsFor(cfg_.difficulty).stepSec;
     while (timeAcc_ >= step) 
@@ -228,6 +385,22 @@ void PlayState::update(float dt)
                     portalLockCell_ = Vec2i(-9999, -9999);
             }
         }
+
+        if (gateUnlocked_ && snake_.head().x == gateCell_.x && snake_.head().y == gateCell_.y)
+            {
+            sm_.push(std::make_unique<VictoryState>(
+                sm_, win_, cfg_, res_, levelIndex_, score_.value(),
+                [this]
+                {
+                if (levelIndex_ < 3) startLevel(levelIndex_ + 1);
+                else 
+                {
+                    sm_.push(std::make_unique<GameOverState>(sm_, win_, cfg_, res_, score_.value()));
+                    res_.switchToGameOver();
+                }
+                }));
+            return;
+            }
 
         const Vec2i h = snake_.head();
         if (level_.grid().isObstacle(h.x, h.y) && snake_.canBreakObstacles()) 
@@ -284,12 +457,14 @@ void PlayState::update(float dt)
                 if (p.kind == PowerUpKind::Breaker) 
                 {
                     snake_.enableBreaker(3.0f);
+                    brUiMaxSec_ = 3.0f;
                 }
                 powerups_.erase(powerups_.begin() + i);
                 break;
             }
         }
     }
+
     // EPH: toggle visibility of temporary obstacles
     if (cfg_.ephemeralObstacles) 
     {
@@ -419,6 +594,17 @@ void PlayState::draw(sf::RenderTarget& rt)
         }
     }
 
+    if (gateUnlocked_) 
+    {
+        // alpha pulse
+        gatePulse_ += 0.8f * (1.f / 60.f);
+        float a = 180.f + 60.f * std::sin(gatePulse_ * 6.28318f);
+        auto col = gateViz_.getFillColor();
+        col.a = (sf::Uint8)std::clamp<int>(int(a), 0, 255);
+        gateViz_.setFillColor(col);
+        rt.draw(gateViz_);
+    }
+
     const float t = portalPulseT_;
     const float freq = 1.5f;
     const float pulseScale = 1.0f + 0.12f * std::sin(2.f * 3.1415926f * freq * t);
@@ -462,6 +648,16 @@ void PlayState::draw(sf::RenderTarget& rt)
         drawPulsingCircle(p.b, outCol, /*darker=*/true);
     }
 
+    auto prev = rt.getView();
+    rt.setView(rt.getDefaultView());
+    if (snake_.breakerTimeLeft() > 0.f) 
+    {
+        rt.draw(brBack_);
+        rt.draw(brFill_);
+        rt.draw(brText_);
+    }
+    rt.setView(prev);
+
     if (apple_) apple_->draw(rt);
     snake_.draw(rt);
 
@@ -483,7 +679,6 @@ void PlayState::draw(sf::RenderTarget& rt)
 
     if (apple_) 
     {
-
         const auto c = apple_->cell();
         const float px = static_cast<float>(c.x * CELL);
         const float py = static_cast<float>(c.y * CELL);

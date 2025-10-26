@@ -16,6 +16,7 @@
 #include <functional>
 #include "world/Portal.h"
 #include <vector>
+#include <array>
 #include <algorithm>
 
 struct PlayContext;
@@ -93,6 +94,34 @@ private:
 
     void spawnPortals(int pairs = 1);
     bool isPortalCell(const Vec2i& c, size_t* outPairIdx = nullptr, bool* isA = nullptr) const;
+
+    // HUD Breaker
+    sf::Text brText_;
+    sf::RectangleShape brBack_;
+    sf::RectangleShape brFill_;
+    sf::Vector2f brPos_{ 16.f, 16.f };
+    sf::Vector2f brSize_{ 160.f, 12.f };
+
+    float brUiMaxSec_{ 3.0f };
+    float brUiUpdateThrottle_{ 0.0f };
+
+    // Level progression
+    int   levelIndex_{ 1 };
+    int   scoreAtLevelStart_{ 0 }; // init mark to enter on level
+    std::array<int, 3> levelTargets_{ {50,100,250} };
+    // Level Gate
+    bool  gateUnlocked_{ false };
+    Vec2i gateCell_{ -1,-1 };
+    sf::RectangleShape gateViz_;
+    float gatePulse_{ 0.f };
+
+    // helpers
+    void  maybeUnlockGate(); // open gate check
+    bool  isBorderNonCorner(int x, int y) const;
+    void  unlockGate();
+    void  clearGate();
+    void  startLevel(int idx); // reinit level
+    int   levelTarget() const { return levelTargets_[std::clamp(levelIndex_, 1, 3) - 1]; }
 };
 
 struct PlayContext 

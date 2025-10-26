@@ -211,7 +211,8 @@
 				25,
 				26,
 				27,
-				28
+				28,
+				29
 			]
 		}
 	],
@@ -384,6 +385,11 @@
 		{
 			"backtrace" : 1,
 			"path" : "include/states/SettingsState.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/states/VictoryState.h",
 			"sourceGroupIndex" : 1
 		}
 	],
