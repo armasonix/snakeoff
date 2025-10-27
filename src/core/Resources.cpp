@@ -100,6 +100,9 @@ bool Resources::load(const std::string& assetsDir)
     eat_ = std::make_unique<sf::SoundBuffer>();
     death_ = std::make_unique<sf::SoundBuffer>();
     win_ = std::make_unique<sf::SoundBuffer>();
+    bonus_ = std::make_unique<sf::SoundBuffer>();
+    break_ = std::make_unique<sf::SoundBuffer>();
+    portal_ = std::make_unique<sf::SoundBuffer>();
     sfxUiHitBuf_ = std::make_unique<sf::SoundBuffer>();
     sfxUiMoveBuf_ = std::make_unique<sf::SoundBuffer>();
 
@@ -107,6 +110,9 @@ bool Resources::load(const std::string& assetsDir)
     const std::string eatPath = assetsDir + "/sfx/apple.wav";
     const std::string losePath = assetsDir + "/sfx/lose.wav";
     const std::string winPath = assetsDir + "/sfx/win.wav";
+    const std::string bonusPath = assetsDir + "/sfx/bonus.wav";
+    const std::string breakPath = assetsDir + "/sfx/break.wav";
+    const std::string portalPath = assetsDir + "/sfx/portal.wav";
     const std::string sfxuihitPath = assetsDir + "/sfx/menu_select.wav";
     const std::string sfxuimovePath = assetsDir + "/sfx/hit.wav";
 
@@ -116,6 +122,9 @@ bool Resources::load(const std::string& assetsDir)
     ok &= ensureExists(eatPath, "sound");
     ok &= ensureExists(losePath, "sound");
     ok &= ensureExists(winPath, "sound");
+    ok &= ensureExists(bonusPath, "sound");
+    ok &= ensureExists(breakPath, "sound");
+    ok &= ensureExists(portalPath, "sound");
     ok &= ensureExists(sfxuihitPath, "sound");
     ok &= ensureExists(sfxuimovePath, "sound");
     if (!ok) 
@@ -143,6 +152,21 @@ bool Resources::load(const std::string& assetsDir)
     if (!win_->loadFromFile(winPath))
     {
         std::cerr << "[RES] SFML failed to load sound: " << winPath << "\n";
+        ok = false;
+    }
+    if (!bonus_->loadFromFile(bonusPath))
+    {
+        std::cerr << "[RES] SFML failed to load sound: " << bonusPath << "\n";
+        ok = false;
+    }
+    if (!break_->loadFromFile(breakPath))
+    {
+        std::cerr << "[RES] SFML failed to load sound: " << breakPath << "\n";
+        ok = false;
+    }
+    if (!portal_->loadFromFile(portalPath))
+    {
+        std::cerr << "[RES] SFML failed to load sound: " << portalPath << "\n";
         ok = false;
     }
     if (!sfxUiHitBuf_->loadFromFile(sfxuihitPath))

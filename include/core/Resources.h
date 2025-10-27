@@ -16,6 +16,9 @@ public:
     const sf::SoundBuffer& sfxEat() const { return *eat_; }
     const sf::SoundBuffer& sfxDeath() const { return *death_; }
     const sf::SoundBuffer& sfxWin() const { return *win_; }
+    const sf::SoundBuffer& sfxBonus() const { return *bonus_; }
+    const sf::SoundBuffer& sfxBreak() const { return *break_; }
+    const sf::SoundBuffer& sfxPortal() const { return *portal_; }
     const sf::SoundBuffer& sfxUiMove() const { return *sfxUiMoveBuf_; }
     const sf::SoundBuffer& sfxUiHit()  const { return *sfxUiHitBuf_; }
 
@@ -40,7 +43,7 @@ public:
 
 private:
     std::unique_ptr<sf::Font> font_;
-    std::unique_ptr<sf::SoundBuffer> eat_, death_, sfxUiMoveBuf_, sfxUiHitBuf_, win_;
+    std::unique_ptr<sf::SoundBuffer> eat_, death_, sfxUiMoveBuf_, sfxUiHitBuf_, win_, bonus_, break_, portal_;
 
     bool soundOn_ = true;
     bool musicOn_ = true;

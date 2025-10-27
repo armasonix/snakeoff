@@ -19,8 +19,11 @@ PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resou
     snake_({ cfg.gridWidth / 2, cfg.gridHeight / 2 }),
     hud_(res.font())
 {
-    res_.playSfx(sfxEat_);
-    res_.playSfx(sfxDeath_);
+    sfxEat_.setBuffer(res_.sfxEat());
+    sfxDeath_.setBuffer(res_.sfxDeath());
+    sfxBonus_.setBuffer(res_.sfxBonus());
+    sfxBreak_.setBuffer(res_.sfxBreak());
+    sfxPortal_.setBuffer(res_.sfxPortal());
 }
 
 void PlayState::onEnter() 
@@ -394,6 +397,7 @@ void PlayState::update(float dt)
                         return;
                     }
                     snake_.teleportHead(dst);
+                    res_.playSfx(sfxPortal_, 100.f);
                     portalLockCell_ = dst;
                 }
             }
@@ -427,6 +431,7 @@ void PlayState::update(float dt)
             if (!level_.grid().isBorder(h.x, h.y)) 
             {
                 level_.grid().destroyObstacle(h.x, h.y);
+                res_.playSfx(sfxBreak_, 100.f);
             }
         }
 
@@ -477,6 +482,7 @@ void PlayState::update(float dt)
                 {
                     snake_.enableBreaker(3.0f);
                     brUiMaxSec_ = 3.0f;
+                    res_.playSfx(sfxBonus_, 100.f);
                 }
                 powerups_.erase(powerups_.begin() + i);
                 break;

@@ -58,7 +58,7 @@ private:
     HUD                     hud_;
     CameraShake             shake_;
 
-    sf::Sound               sfxEat_, sfxDeath_;
+    sf::Sound               sfxEat_, sfxDeath_, sfxBonus_, sfxBreak_, sfxPortal_;             
     float                   timeAcc_{ 0.f };
     float                   startDelay_{ 0.f };
     float                   portalPulseT_ = 0.f;
