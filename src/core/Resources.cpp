@@ -182,9 +182,34 @@ bool Resources::load(const std::string& assetsDir)
 
     if (!ok) 
     {
-        std::cerr << "[RES] Resource loading FAILED. "
-            << "Check file formats/permissions and that the files are valid.\n";
+        std::cerr << "[RES] Resource loading FAILED (SFX/FONT). "
+        "Will still try to load textures…\n";
     }
+    auto loadTex = [&](std::unique_ptr<sf::Texture>& t, const std::string& path) 
+    {
+        t.reset(new sf::Texture());
+        t->setSmooth(true);
+        if (!t->loadFromFile(path)) 
+        {
+            std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
+            ok = false;
+        }
+    };
+
+    const std::string G = "assets/tex/";
+    loadTex(txSnakeHead_, G + "sHead.png");
+    loadTex(txSnakeBody_, G + "sBody.png");
+    loadTex(txSnakeTail_, G + "sTail.png");
+    loadTex(txApple1_, G + "apple.png");
+    loadTex(txApple2_, G + "apple2.png");
+    loadTex(txApple3_, G + "apple3.png");
+    loadTex(txPowerBomb_, G + "bomb.png");
+    loadTex(txPowerMush_, G + "mush.png");
+    loadTex(txExplosion_, G + "expl.png");
+    loadTex(txGround_, G + "ground.png");
+    loadTex(txWall_, G + "wall.png");
+    loadTex(txObstacle_, G + "obs.png");
+
     return ok;
 }
 

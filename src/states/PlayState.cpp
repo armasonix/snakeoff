@@ -24,6 +24,20 @@ PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resou
     sfxBonus_.setBuffer(res_.sfxBonus());
     sfxBreak_.setBuffer(res_.sfxBreak());
     sfxPortal_.setBuffer(res_.sfxPortal());
+
+    // texture sprites linking
+    sprGround_.setTexture(res_.txGround());
+    sprWall_.setTexture(res_.txWall());
+    sprObs_.setTexture(res_.txObstacle());
+    sprApple1_.setTexture(res_.txApple1());
+    sprApple2_.setTexture(res_.txApple2());
+    sprApple3_.setTexture(res_.txApple3());
+    sprPowerBomb_.setTexture(res_.txPowerBomb());
+    sprPowerMush_.setTexture(res_.txPowerMush());
+    sprExpl_.setTexture(res_.txExplosion());
+    sprHead_.setTexture(res_.txSnakeHead());
+    sprBody_.setTexture(res_.txSnakeBody());
+    sprTail_.setTexture(res_.txSnakeTail());
 }
 
 void PlayState::onEnter() 
@@ -47,12 +61,12 @@ void PlayState::onEnter()
     ProcGenParams g;
     switch (static_cast<int>(cfg_.difficulty))
     {
-    case 1: g.maxPlacements = 12; g.maxSingles = 6;  g.minReachable = 0.75f; break;
-    case 2: g.maxPlacements = 16; g.maxSingles = 8;  g.minReachable = 0.70f; break;
-    case 3: g.maxPlacements = 20; g.maxSingles = 10; g.minReachable = 0.65f; break;
-    case 4: g.maxPlacements = 24; g.maxSingles = 12; g.minReachable = 0.60f; break;
-    case 5: g.maxPlacements = 28; g.maxSingles = 14; g.minReachable = 0.55f; break;
-    default: break;
+        case 1: g.maxPlacements = 12; g.maxSingles = 6;  g.minReachable = 0.75f; break;
+        case 2: g.maxPlacements = 16; g.maxSingles = 8;  g.minReachable = 0.70f; break;
+        case 3: g.maxPlacements = 20; g.maxSingles = 10; g.minReachable = 0.65f; break;
+        case 4: g.maxPlacements = 24; g.maxSingles = 12; g.minReachable = 0.60f; break;
+        case 5: g.maxPlacements = 28; g.maxSingles = 14; g.minReachable = 0.55f; break;
+        default: break;
     }
 
     static thread_local std::mt19937 rng{ std::random_device{}() };
@@ -432,6 +446,7 @@ void PlayState::update(float dt)
             {
                 level_.grid().destroyObstacle(h.x, h.y);
                 res_.playSfx(sfxBreak_, 100.f);
+                explFx_.push_back({ cellCenter(h.x, h.y), 0.25f });
             }
         }
 
@@ -523,6 +538,13 @@ void PlayState::update(float dt)
             }
         }
     }
+    // vfx explosion
+    for (auto it = explFx_.begin(); it != explFx_.end(); ) 
+    {
+        it->t -= dt;
+        if (it->t <= 0.f) it = explFx_.erase(it);
+        else ++it;
+    }
 }
 
 bool PlayState::isCellFree(int x, int y) const
@@ -604,19 +626,186 @@ void PlayState::draw(sf::RenderTarget& rt)
     shaken.move(shake_.offsetX(), shake_.offsetY());
     win_.setView(shaken);
 
-    // world render
-    sf::RectangleShape rect({ (float)CELL - 1, (float)CELL - 1 });
+    auto prevView = rt.getView();
+        rt.setView(prevView);
+    {
+        auto prev = rt.getView();
+        rt.setView(rt.getDefaultView());
+        const auto winSz = win_.getSize();
+        const auto& tx = res_.txGround();
+        sprGround_.setOrigin(0.f, 0.f);
+        sprGround_.setPosition(0.f, 0.f);
+        sprGround_.setScale((float)winSz.x / (float)tx.getSize().x,
+                            (float)winSz.y / (float)tx.getSize().y);
+        rt.draw(sprGround_);
+        rt.setView(prev);
+    }
+
+    // prepare sprite scal for grid
+    fitSpriteToCell(sprWall_, *sprWall_.getTexture());
+    fitSpriteToCell(sprObs_, *sprObs_.getTexture());
+    fitSpriteToCell(sprApple1_, *sprApple1_.getTexture());
+    fitSpriteToCell(sprApple2_, *sprApple2_.getTexture());
+    fitSpriteToCell(sprApple3_, *sprApple3_.getTexture());
+    fitSpriteToCell(sprPowerBomb_, *sprPowerBomb_.getTexture());
+    fitSpriteToCell(sprPowerMush_, *sprPowerMush_.getTexture());
+    fitSpriteToCell(sprExpl_, *sprExpl_.getTexture());
+    fitSpriteToCell(sprHead_, *sprHead_.getTexture());
+    fitSpriteToCell(sprBody_, *sprBody_.getTexture());
+    fitSpriteToCell(sprTail_, *sprTail_.getTexture());
+
+    // grid: walls and obs
     for (int y = 0; y < level_.grid().h(); ++y)
     {
         for (int x = 0; x < level_.grid().w(); ++x)
         {
-            if (level_.grid().get({ x, y }) == CellType::Wall)
+            const auto pos = cellCenter(x, y);
+            if (level_.grid().isBorder(x, y)) 
             {
-                rect.setPosition((float)(x * CELL), (float)(y * CELL));
-                rect.setFillColor(sf::Color(50, 50, 50));
-                rt.draw(rect);
+                sprWall_.setRotation(0.f);
+                sprWall_.setPosition(pos);
+                rt.draw(sprWall_);
+            }
+            else if (level_.grid().isObstacle(x, y)) 
+            {
+                sprObs_.setRotation(0.f);
+                sprObs_.setPosition(pos);
+                rt.draw(sprObs_);
             }
         }
+    }
+
+    // apples vars
+    if (apple_) 
+    {
+        const auto c = apple_->cell();
+        const auto pos = cellCenter(c.x, c.y);
+        sf::Sprite * s = &sprApple1_;
+        switch (appleKind_) 
+        {
+            case AppleKind::Bonus:   s = &sprApple2_; break;
+            case AppleKind::Poison:  s = &sprApple3_; break;
+            case AppleKind::Confuse: s = &sprApple3_; break;
+            default: break;
+        }
+        s->setRotation(0.f);
+        s->setPosition(pos);
+        rt.draw(*s);
+    }
+
+    // powerups
+    for (const auto& p : powerups_) 
+    {
+        const auto pos = cellCenter(p.cellX, p.cellY);
+        sf::Sprite * s = nullptr;
+        if (p.kind == PowerUpKind::Breaker) s = &sprPowerBomb_;
+        else /* PowerUpKind::Confuse */ s = &sprPowerMush_;
+        if (s) 
+        {
+            s->setRotation(0.f);
+            s->setPosition(pos);
+            rt.draw(*s);
+        }
+    }
+
+    // snake: head/body/tail
+    const auto& body = snake_.body();
+    if (!body.empty()) 
+    {
+        // head
+        {
+        Vec2i h = body.front();
+        float rot = 0.f;
+        if (body.size() >= 2) 
+            {
+                Vec2i n = *(body.begin() + 1);
+                Vec2i d{ h.x - n.x, h.y - n.y };
+                if (d.x == 1) rot = 0.f;        // r
+                else if (d.x == -1) rot = 180.f;// l
+                else if (d.y == 1) rot = 90.f;  // d
+                else if (d.y == -1) rot = 270.f;// u
+            }
+            sprHead_.setRotation(rot);
+            sprHead_.setPosition(cellCenter(h.x, h.y));
+            rt.draw(sprHead_);
+        }
+        // body
+        for (size_t i = 1; i + 1 < body.size(); ++i) 
+        {
+            const Vec2i prev = body[i - 1];
+            const Vec2i c = body[i];
+            const Vec2i next = body[i + 1];
+            const bool vertical = (prev.x == next.x);
+            const bool horizontal = (prev.y == next.y);
+            const bool corner = (!vertical && !horizontal);
+            const sf::Vector2f base = sprBody_.getScale();
+            const sf::Vector2f pos = cellCenter(c.x, c.y);
+            if (!corner) 
+            {
+                float rot = vertical ? 90.f : 0.f;
+                sf::Vector2f cur = base;
+                if (vertical)  cur.y *= 1.25f; else cur.x *= 1.25f;
+                sprBody_.setRotation(rot);
+                sprBody_.setScale(cur);
+                sprBody_.setPosition(pos);
+                rt.draw(sprBody_);
+                sprBody_.setScale(base);
+            }
+            else 
+            {
+                sf::Vector2f curH = base;
+                curH.x *= 1.28f;
+                curH.y *= 1.05f;
+                sprBody_.setRotation(0.f);
+                sprBody_.setScale(curH);
+                sprBody_.setPosition(pos);
+                rt.draw(sprBody_);
+                sf::Vector2f curV = base;
+                curV.y *= 1.28f;
+                curV.x *= 1.05f;
+                sprBody_.setRotation(90.f);
+                sprBody_.setScale(curV);
+                sprBody_.setPosition(pos);
+                rt.draw(sprBody_);
+                sprBody_.setScale(base);
+            }
+        }
+        // tail
+        if (body.size() >= 2) 
+        {
+            Vec2i t = body.back();
+            Vec2i prev = *(body.end() - 2);
+            const Vec2i d = { prev.x - t.x, prev.y - t.y };
+            float rot = 0.f;
+            if (d.x == 1)       rot = 0.f;
+            else if (d.x == -1) rot = 180.f;
+            else if (d.y == 1)  rot = 90.f;
+            else if (d.y == -1) rot = 270.f;
+            rot += 180.f; if (rot >= 360.f) rot -= 360.f;
+            const sf::Vector2f base = sprTail_.getScale();
+            sf::Vector2f cur = base;
+            if (rot == 0.f || rot == 180.f) cur.x *= 1.15f;
+            else                             cur.y *= 1.15f;
+            sprTail_.setRotation(rot);
+            sprTail_.setScale(cur);
+            sprTail_.setPosition(cellCenter(t.x, t.y));
+            rt.draw(sprTail_);
+            sprTail_.setScale(base);
+        }
+    }
+
+    // explosion vfx
+    for (const auto& fx : explFx_) 
+    {
+        const float kLife = 0.25f;
+        const float t = std::max(0.f, std::min(fx.t, kLife)) / kLife; // 0..1
+        sf::Color c = sf::Color::White; c.a = (sf::Uint8)std::round(255.f * t);
+        sprExpl_.setColor(c);
+        sprExpl_.setPosition(fx.pos);
+        const auto& tx = *sprExpl_.getTexture();
+        sprExpl_.setScale((cfg_.cellPx / (float)tx.getSize().x) * (1.f + 0.2f * (1.f - t)),
+        (cfg_.cellPx / (float)tx.getSize().y) * (1.f + 0.2f * (1.f - t)));
+        rt.draw(sprExpl_);
     }
 
     if (gateUnlocked_) 
@@ -637,15 +826,15 @@ void PlayState::draw(sf::RenderTarget& rt)
     const sf::Uint8 pulseA = (sf::Uint8)(80 * (0.5f + 0.5f * std::sin(2.f * 3.1415926f * freq * t)));
 
     auto drawCellFilled = [&](const Vec2i& c, sf::Color col) 
-        {
+    {
         sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
         r.setPosition((float)c.x * CELL + 1.f, (float)c.y * CELL + 1.f);
         r.setFillColor(col);
         rt.draw(r);
-        };
+    };
 
     auto drawPulsingCircle = [&](const Vec2i& c, sf::Color col, bool darker) 
-        {
+    {
         const float cx = (float)c.x * CELL + CELL * 0.5f;
         const float cy = (float)c.y * CELL + CELL * 0.5f;
         const float radius = (CELL - 6) * 0.5f;
@@ -659,7 +848,7 @@ void PlayState::draw(sf::RenderTarget& rt)
         circ.setScale(pulseScale, pulseScale);
         circ.setFillColor(col);
         rt.draw(circ);
-        };
+    };
 
     for (const auto& p : portals_) 
     {
@@ -683,124 +872,106 @@ void PlayState::draw(sf::RenderTarget& rt)
     }
     rt.setView(prev);
 
-    if (apple_) apple_->draw(rt);
-    snake_.draw(rt);
-
-    if (confuseVisT_ > 0.f) {
-        // color speed
-        const float hueBase = std::fmod(confuseHueT_ * 180.f, 360.f);
-        int idx = 0;
-        for (const auto& cell : snake_.body()) 
-        {
-            const float h = std::fmod(hueBase + idx * 12.f, 360.f);
-            const sf::Color col = hsv(h, 0.85f, 1.0f, 150); // opacity
-            sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
-            r.setPosition((float)cell.x * CELL + 1.f, (float)cell.y * CELL + 1.f);
-            r.setFillColor(col);
-            rt.draw(r);
-            ++idx;
-        }
-    }
-
-    if (apple_) 
+    if (false && confuseVisT_ > 0.f)
     {
-        const auto c = apple_->cell();
-        const float px = static_cast<float>(c.x * CELL);
-        const float py = static_cast<float>(c.y * CELL);
-
-        sf::Color col = sf::Color(200, 200, 200);
-        switch (appleKind_) 
         {
-        case AppleKind::Bonus:   col = sf::Color(255, 215, 0);   break; // gold
-        case AppleKind::Poison:  col = sf::Color(170, 80, 200); break; // purple
-        case AppleKind::Confuse: col = sf::Color(80, 200, 200); break; // cyan
-        default: break;
+            // color speed
+            const float hueBase = std::fmod(confuseHueT_ * 180.f, 360.f);
+            int idx = 0;
+            for (const auto& cell : snake_.body())
+            {
+                const float h = std::fmod(hueBase + idx * 12.f, 360.f);
+                const sf::Color col = hsv(h, 0.85f, 1.0f, 150); // opacity
+                sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
+                r.setPosition((float)cell.x * CELL + 1.f, (float)cell.y * CELL + 1.f);
+                r.setFillColor(col);
+                rt.draw(r);
+                ++idx;
+            }
         }
 
-        sf::CircleShape appleCircle(static_cast<float>(CELL - 2) * 0.5f);
-        appleCircle.setPosition(px + 1.f, py + 1.f);
-        appleCircle.setFillColor(col);
-        rt.draw(appleCircle);
-
-        if (appleTTL_ > 0.f) 
+        if (apple_)
         {
-            float ttlTotal = 0.f;
-            switch (appleKind_) 
+            const auto c = apple_->cell();
+            const float px = static_cast<float>(c.x * CELL);
+            const float py = static_cast<float>(c.y * CELL);
+
+            sf::Color col = sf::Color(200, 200, 200);
+            switch (appleKind_)
             {
-            case AppleKind::Bonus:   ttlTotal = cfg_.apple.bonusTTL;   break;
-            case AppleKind::Poison:  ttlTotal = cfg_.apple.poisonTTL;  break;
-            case AppleKind::Confuse: ttlTotal = cfg_.apple.confuseTTL; break;
+            case AppleKind::Bonus:   col = sf::Color(255, 215, 0);   break; // gold
+            case AppleKind::Poison:  col = sf::Color(170, 80, 200); break; // purple
+            case AppleKind::Confuse: col = sf::Color(80, 200, 200); break; // cyan
             default: break;
             }
-            if (ttlTotal > 0.f) 
+
+            if (appleTTL_ > 0.f)
             {
-                const float frac = std::clamp(appleTTL_ / ttlTotal, 0.f, 1.f);
-                const float w = (CELL - 2) * frac;
-                sf::RectangleShape bar({ w, 4.f });
-                bar.setPosition(px + 1.f, py - 5.f);
-                bar.setFillColor(col);
-                rt.draw(bar);
+                float ttlTotal = 0.f;
+                switch (appleKind_)
+                {
+                case AppleKind::Bonus:   ttlTotal = cfg_.apple.bonusTTL;   break;
+                case AppleKind::Poison:  ttlTotal = cfg_.apple.poisonTTL;  break;
+                case AppleKind::Confuse: ttlTotal = cfg_.apple.confuseTTL; break;
+                default: break;
+                }
+                if (ttlTotal > 0.f)
+                {
+                    const float frac = std::clamp(appleTTL_ / ttlTotal, 0.f, 1.f);
+                    const float w = (CELL - 2) * frac;
+                    sf::RectangleShape bar({ w, 4.f });
+                    bar.setPosition(px + 1.f, py - 5.f);
+                    bar.setFillColor(col);
+                    rt.draw(bar);
+                }
             }
         }
-    }
 
-    for (const auto& p : powerups_) 
-    {
-        const float r = (cfg_.cellPx * 0.7f) * 0.5f;
-        sf::CircleShape s(r);
-        s.setOrigin(r, r);
-        s.setPosition(p.cellX * cfg_.cellPx + cfg_.cellPx * 0.5f,
-            p.cellY * cfg_.cellPx + cfg_.cellPx * 0.5f);
-        s.setFillColor(sf::Color(255, 215, 0));
-        s.setOutlineThickness(2.f);
-        s.setOutlineColor(sf::Color::Black);
-        rt.draw(s);
-    }
-
-    // STAGE overlay
-    if (stageTimer_ > 0.f) 
-    {
-       auto prevUI = rt.getView();
-       rt.setView(rt.getDefaultView());
-  
-       const float kTotal = 2.0f;
-       float t = std::max(0.f, std::min(stageTimer_, kTotal)) / kTotal;
-       sf::Color fill = stageText_.getFillColor();
-       fill.a = static_cast<sf::Uint8>(std::round(255.f * t));
-       sf::Color out = stageText_.getOutlineColor();
-       out.a = fill.a;
-       stageText_.setFillColor(fill);
-       stageText_.setOutlineColor(out);
-
-       const sf::Vector2f center = win_.getView().getCenter();
-       const auto b = stageText_.getLocalBounds();
-       stageText_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
-       stageText_.setPosition(std::floor(center.x), std::floor(center.y - 120.f));
-
-       rt.draw(stageText_);
-       rt.setView(prevUI);
-    }
-
-    // returns base cam — HUD draws by coords
-    win_.setView(base);
-    hud_.draw(rt, score_);
-    {
-        sf::Text info("", res_.font(), 16);
-        info.setPosition(12.f, 48.f);
-        std::string msg;
-
-        if (effects_.spdRemain() > 0.f) 
+        // STAGE overlay
+        if (stageTimer_ > 0.f)
         {
-            msg += "SPEED x" + std::to_string(effects_.speedMul()) +
-                " (" + std::to_string((int)std::ceil(effects_.spdRemain())) + "s)  ";
+            auto prevUI = rt.getView();
+            rt.setView(rt.getDefaultView());
+
+            const float kTotal = 2.0f;
+            float t = std::max(0.f, std::min(stageTimer_, kTotal)) / kTotal;
+            sf::Color fill = stageText_.getFillColor();
+            fill.a = static_cast<sf::Uint8>(std::round(255.f * t));
+            sf::Color out = stageText_.getOutlineColor();
+            out.a = fill.a;
+            stageText_.setFillColor(fill);
+            stageText_.setOutlineColor(out);
+
+            const sf::Vector2f center = win_.getView().getCenter();
+            const auto b = stageText_.getLocalBounds();
+            stageText_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            stageText_.setPosition(std::floor(center.x), std::floor(center.y - 120.f));
+
+            rt.draw(stageText_);
+            rt.setView(prevUI);
         }
-        if (effects_.invRemain() > 0.f) 
+
+        // returns base cam — HUD draws by coords
+        win_.setView(base);
+        hud_.draw(rt, score_);
         {
-            msg += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
+            sf::Text info("", res_.font(), 16);
+            info.setPosition(12.f, 48.f);
+            std::string msg;
+
+            if (effects_.spdRemain() > 0.f)
+            {
+                msg += "SPEED x" + std::to_string(effects_.speedMul()) +
+                    " (" + std::to_string((int)std::ceil(effects_.spdRemain())) + "s)  ";
+            }
+            if (effects_.invRemain() > 0.f)
+            {
+                msg += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
+            }
+            info.setString(msg);
+            info.setFillColor(sf::Color(180, 220, 180));
+            rt.draw(info);
         }
-        info.setString(msg);
-        info.setFillColor(sf::Color(180, 220, 180));
-        rt.draw(info);
     }
 }
 
@@ -821,26 +992,26 @@ void PlayState::spawnApple()
 
     // roll apple type by weights from Config
     auto rollKind = [&]() -> AppleKind
-        {
-            const int sum = cfg_.apple.wNormal + cfg_.apple.wBonus + cfg_.apple.wPoison + cfg_.apple.wConfuse;
-            static thread_local std::mt19937 rng{ std::random_device{}() };
-            std::uniform_int_distribution<int> dist(1, std::max(1, sum));
-            int r = dist(rng);
+    {
+        const int sum = cfg_.apple.wNormal + cfg_.apple.wBonus + cfg_.apple.wPoison + cfg_.apple.wConfuse;
+        static thread_local std::mt19937 rng{ std::random_device{}() };
+        std::uniform_int_distribution<int> dist(1, std::max(1, sum));
+        int r = dist(rng);
 
-            if ((r -= cfg_.apple.wNormal) <= 0) return AppleKind::Normal;
-            if ((r -= cfg_.apple.wBonus) <= 0) return AppleKind::Bonus;
-            if ((r -= cfg_.apple.wPoison) <= 0) return AppleKind::Poison;
-            return AppleKind::Confuse;
-        };
+        if ((r -= cfg_.apple.wNormal) <= 0) return AppleKind::Normal;
+        if ((r -= cfg_.apple.wBonus) <= 0) return AppleKind::Bonus;
+        if ((r -= cfg_.apple.wPoison) <= 0) return AppleKind::Poison;
+        return AppleKind::Confuse;
+    };
 
     appleKind_ = rollKind();
     // TTL for bonus
     switch (appleKind_)
     {
-    case AppleKind::Normal:  appleTTL_ = 0.f;                         break;
-    case AppleKind::Bonus:   appleTTL_ = cfg_.apple.bonusTTL;         break;
-    case AppleKind::Poison:  appleTTL_ = cfg_.apple.poisonTTL;        break;
-    case AppleKind::Confuse: appleTTL_ = cfg_.apple.confuseTTL;       break;
+        case AppleKind::Normal:  appleTTL_ = 0.f;                   break;
+        case AppleKind::Bonus:   appleTTL_ = cfg_.apple.bonusTTL;   break;
+        case AppleKind::Poison:  appleTTL_ = cfg_.apple.poisonTTL;  break;
+        case AppleKind::Confuse: appleTTL_ = cfg_.apple.confuseTTL; break;
     }
 }
 

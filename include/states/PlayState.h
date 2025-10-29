@@ -127,6 +127,31 @@ private:
     void  clearGate();
     void  startLevel(int idx); // reinit level
     int   levelTarget() const { return levelTargets_[std::clamp(levelIndex_, 1, 3) - 1]; }
+
+    // texture sprites
+    sf::Sprite sprGround_, sprWall_, sprObs_;
+    sf::Sprite sprApple1_, sprApple2_, sprApple3_;
+    sf::Sprite sprHead_, sprBody_, sprTail_;
+    sf::Sprite sprPowerBomb_, sprPowerMush_;
+    sf::Sprite sprExpl_;
+
+    // texture helpers
+    inline sf::Vector2f cellCenter(int cx, int cy) const 
+    {
+        const float cs = static_cast<float>(cfg_.cellPx);
+        return { cx * cs + cs * 0.5f, cy * cs + cs * 0.5f };
+    }
+    inline void fitSpriteToCell(sf::Sprite & s, const sf::Texture & tx) const 
+    {
+        const auto sz = tx.getSize();
+        s.setOrigin(sf::Vector2f(sz.x * 0.5f, sz.y * 0.5f));
+        s.setScale(cfg_.cellPx / static_cast<float>(sz.x),
+        cfg_.cellPx / static_cast<float>(sz.y));
+    }
+
+    // vfx explosion
+    struct ExplFx { sf::Vector2f pos; float t; };
+    std::vector<ExplFx> explFx_;
 };
 
 struct PlayContext 
