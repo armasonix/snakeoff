@@ -54,6 +54,11 @@ public:
     const sf::Texture & txGround()    const { return *txGround_; }
     const sf::Texture & txWall()      const { return *txWall_; }
     const sf::Texture & txObstacle()  const { return *txObstacle_; }
+    // corners
+    const sf::Texture & txBodyC1() const { return *txBodyC1_; }
+    const sf::Texture & txBodyC2() const { return *txBodyC2_; }
+    const sf::Texture & txBodyC3() const { return *txBodyC3_; }
+    const sf::Texture & txBodyC4() const { return *txBodyC4_; }
 
 private:
     std::unique_ptr<sf::Font> font_;
@@ -79,4 +84,9 @@ private:
     std::unique_ptr<sf::Texture> txGround_;
     std::unique_ptr<sf::Texture> txWall_;
     std::unique_ptr<sf::Texture> txObstacle_;
+    // corners
+    std::unique_ptr<sf::Texture> txBodyC1_;
+    std::unique_ptr<sf::Texture> txBodyC2_;
+    std::unique_ptr<sf::Texture> txBodyC3_;
+    std::unique_ptr<sf::Texture> txBodyC4_;
 };

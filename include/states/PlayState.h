@@ -11,6 +11,7 @@
 #include "ui/HUD.h"
 #include "vfx/CameraShake.h"
 #include "systems/Effects.h"
+#include <SFML/Graphics/VertexArray.hpp>
 #include <memory>
 #include <random>
 #include <functional>
@@ -132,8 +133,15 @@ private:
     sf::Sprite sprGround_, sprWall_, sprObs_;
     sf::Sprite sprApple1_, sprApple2_, sprApple3_;
     sf::Sprite sprHead_, sprBody_, sprTail_;
+    sf::Sprite sprBodyCorner_[4];
     sf::Sprite sprPowerBomb_, sprPowerMush_;
     sf::Sprite sprExpl_;
+    // tile ground sprites 
+    std::vector<sf::Sprite> groundTiles_;
+    void rebuildGroundTiles();
+
+    sf::VertexArray groundVA_;
+    void buildGroundTilemap();
 
     // texture helpers
     inline sf::Vector2f cellCenter(int cx, int cy) const 

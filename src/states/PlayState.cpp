@@ -38,6 +38,10 @@ PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resou
     sprHead_.setTexture(res_.txSnakeHead());
     sprBody_.setTexture(res_.txSnakeBody());
     sprTail_.setTexture(res_.txSnakeTail());
+    sprBodyCorner_[0].setTexture(res_.txBodyC1());
+    sprBodyCorner_[1].setTexture(res_.txBodyC2());
+    sprBodyCorner_[2].setTexture(res_.txBodyC3());
+    sprBodyCorner_[3].setTexture(res_.txBodyC4());
 }
 
 void PlayState::onEnter() 
@@ -93,6 +97,8 @@ void PlayState::onEnter()
     ephVisible_ = true;
     ephTimer_ = 0.f;
     level_.applyObstacles(ephObstacles_);
+
+    buildGroundTilemap();
 
     spawnPortals(1);
     spawnApple();
@@ -583,6 +589,43 @@ void PlayState::spawnBreakerPU()
     }
 }
 
+void PlayState::buildGroundTilemap()
+{
+    const int W = level_.grid().w();
+    const int H = level_.grid().h();
+    const float CELL = static_cast<float>(cfg_.cellPx);
+
+    groundVA_.setPrimitiveType(sf::Quads);
+    groundVA_.resize(static_cast<std::size_t>(W) * static_cast<std::size_t>(H) * 4);
+
+    const sf::Texture& tx = res_.txGround();
+    const float tw = static_cast<float>(tx.getSize().x);
+    const float th = static_cast<float>(tx.getSize().y);
+
+    std::size_t v = 0;
+    for (int y = 0; y < H; ++y)
+    {
+        for (int x = 0; x < W; ++x)
+        {
+            const float px = x * CELL;
+            const float py = y * CELL;
+
+            groundVA_[v + 0].position = { px,         py };
+            groundVA_[v + 1].position = { px + CELL,  py };
+            groundVA_[v + 2].position = { px + CELL,  py + CELL };
+            groundVA_[v + 3].position = { px,         py + CELL };
+            const float u0 = 0.5f, v0 = 0.5f;
+            const float u1 = tw - 0.5f, v1 = th - 0.5f;
+            groundVA_[v + 0].texCoords = { u0, v0 };
+            groundVA_[v + 1].texCoords = { u1, v0 };
+            groundVA_[v + 2].texCoords = { u1, v1 };
+            groundVA_[v + 3].texCoords = { u0, v1 };
+
+            v += 4;
+        }
+    }
+}
+
 // EPH
 void PlayState::ephApplyVisible()
 {
@@ -623,25 +666,18 @@ void PlayState::draw(sf::RenderTarget& rt)
 
     // shake a copy of base cam
     sf::View shaken = base;
-    shaken.move(shake_.offsetX(), shake_.offsetY());
+    const float offX = std::round(shake_.offsetX());
+    const float offY = std::round(shake_.offsetY());
+    shaken.move(offX, offY);
     win_.setView(shaken);
 
-    auto prevView = rt.getView();
-        rt.setView(prevView);
     {
-        auto prev = rt.getView();
-        rt.setView(rt.getDefaultView());
-        const auto winSz = win_.getSize();
-        const auto& tx = res_.txGround();
-        sprGround_.setOrigin(0.f, 0.f);
-        sprGround_.setPosition(0.f, 0.f);
-        sprGround_.setScale((float)winSz.x / (float)tx.getSize().x,
-                            (float)winSz.y / (float)tx.getSize().y);
-        rt.draw(sprGround_);
-        rt.setView(prev);
+        sf::RenderStates st;
+        st.texture = &res_.txGround();
+        rt.draw(groundVA_, st);
     }
 
-    // prepare sprite scal for grid
+    // prepare sprite scale for grid
     fitSpriteToCell(sprWall_, *sprWall_.getTexture());
     fitSpriteToCell(sprObs_, *sprObs_.getTexture());
     fitSpriteToCell(sprApple1_, *sprApple1_.getTexture());
@@ -653,6 +689,8 @@ void PlayState::draw(sf::RenderTarget& rt)
     fitSpriteToCell(sprHead_, *sprHead_.getTexture());
     fitSpriteToCell(sprBody_, *sprBody_.getTexture());
     fitSpriteToCell(sprTail_, *sprTail_.getTexture());
+    for (int i = 0; i < 4; ++i)
+        fitSpriteToCell(sprBodyCorner_[i], *sprBodyCorner_[i].getTexture());
 
     // grid: walls and obs
     for (int y = 0; y < level_.grid().h(); ++y)
@@ -685,7 +723,7 @@ void PlayState::draw(sf::RenderTarget& rt)
         {
             case AppleKind::Bonus:   s = &sprApple2_; break;
             case AppleKind::Poison:  s = &sprApple3_; break;
-            case AppleKind::Confuse: s = &sprApple3_; break;
+            case AppleKind::Confuse: s = &sprPowerMush_; break;
             default: break;
         }
         s->setRotation(0.f);
@@ -735,39 +773,37 @@ void PlayState::draw(sf::RenderTarget& rt)
             const Vec2i prev = body[i - 1];
             const Vec2i c = body[i];
             const Vec2i next = body[i + 1];
-            const bool vertical = (prev.x == next.x);
-            const bool horizontal = (prev.y == next.y);
-            const bool corner = (!vertical && !horizontal);
-            const sf::Vector2f base = sprBody_.getScale();
+            const int dx1 = c.x - prev.x;
+            const int dy1 = c.y - prev.y;
+            const int dx2 = next.x - c.x;
+            const int dy2 = next.y - c.y;
+            const bool straightH = (dy1 == 0 && dy2 == 0);
+            const bool straightV = (dx1 == 0 && dx2 == 0);
+            const bool corner = !(straightH || straightV);
             const sf::Vector2f pos = cellCenter(c.x, c.y);
+
             if (!corner) 
             {
-                float rot = vertical ? 90.f : 0.f;
-                sf::Vector2f cur = base;
-                if (vertical)  cur.y *= 1.25f; else cur.x *= 1.25f;
-                sprBody_.setRotation(rot);
-                sprBody_.setScale(cur);
+                sprBody_.setRotation(straightV ? 90.f : 0.f);
                 sprBody_.setPosition(pos);
                 rt.draw(sprBody_);
-                sprBody_.setScale(base);
             }
             else 
             {
-                sf::Vector2f curH = base;
-                curH.x *= 1.28f;
-                curH.y *= 1.05f;
-                sprBody_.setRotation(0.f);
-                sprBody_.setScale(curH);
-                sprBody_.setPosition(pos);
-                rt.draw(sprBody_);
-                sf::Vector2f curV = base;
-                curV.y *= 1.28f;
-                curV.x *= 1.05f;
-                sprBody_.setRotation(90.f);
-                sprBody_.setScale(curV);
-                sprBody_.setPosition(pos);
-                rt.draw(sprBody_);
-                sprBody_.setScale(base);
+            const bool hasLeft = (prev.x == c.x - 1) || (next.x == c.x - 1);
+            const bool hasRight = (prev.x == c.x + 1) || (next.x == c.x + 1);
+            const bool hasUp = (prev.y == c.y - 1) || (next.y == c.y - 1); 
+            const bool hasDown = (prev.y == c.y + 1) || (next.y == c.y + 1);
+            int idx = 0;
+            if (hasLeft && hasDown)       idx = 0;
+            else if (hasLeft && hasUp)    idx = 1;
+            else if (hasRight && hasDown) idx = 2;
+            else                          idx = 3;
+
+            auto& s = sprBodyCorner_[idx];
+            s.setRotation(0.f);
+            s.setPosition(pos);
+            rt.draw(s);
             }
         }
         // tail

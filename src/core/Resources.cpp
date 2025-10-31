@@ -200,6 +200,12 @@ bool Resources::load(const std::string& assetsDir)
     loadTex(txSnakeHead_, G + "sHead.png");
     loadTex(txSnakeBody_, G + "sBody.png");
     loadTex(txSnakeTail_, G + "sTail.png");
+    // corners
+    loadTex(txBodyC1_, G + "sBodyC1.png");
+    loadTex(txBodyC2_, G + "sBodyC2.png");
+    loadTex(txBodyC3_, G + "sBodyC3.png");
+    loadTex(txBodyC4_, G + "sBodyC4.png");
+
     loadTex(txApple1_, G + "apple.png");
     loadTex(txApple2_, G + "apple2.png");
     loadTex(txApple3_, G + "apple3.png");
@@ -209,6 +215,11 @@ bool Resources::load(const std::string& assetsDir)
     loadTex(txGround_, G + "ground.png");
     loadTex(txWall_, G + "wall.png");
     loadTex(txObstacle_, G + "obs.png");
+    if (txGround_) 
+    {
+        txGround_->setSmooth(false);
+        txGround_->setRepeated(true);
+    }
 
     return ok;
 }
