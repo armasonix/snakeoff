@@ -51,6 +51,16 @@ namespace render
             rt.draw(u.scoreRGB);
         }
 
+        {
+            static int prevScore = std::numeric_limits<int>::min();
+            const int cur = u.score.value();
+            if (cur != prevScore)
+            {
+                u.scoreRGB.setString("Score: " + std::to_string(cur));
+                prevScore = cur;
+            }
+        }
+
         // speed / confuse info
         {
             sf::Text info("", u.res.font(), 16);

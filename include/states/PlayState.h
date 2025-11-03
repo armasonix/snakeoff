@@ -1,6 +1,7 @@
 #pragma once
 #include "states/IGameState.h"
 #include "core/Config.h"
+#include "core/Input.h"
 #include "core/Resources.h"
 #include "world/Level.h"
 #include "entities/Snake.h"
@@ -78,8 +79,11 @@ private:
     // metrics ms draw()
     float tBgMs_ = 0.f, tGridMs_ = 0.f, tPortalsMs_ = 0.f, tSnakeMs_ = 0.f, tUIMs_ = 0.f;
 
-    // --- screen-space overlays ---
+    // screen-space overlays
     void drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldView);
+
+    std::vector<InputAction> actionQueue_;
+    void applyActions_();
 
     // rgb colorout
     float confuseVisT_ = 0.f;
@@ -239,6 +243,8 @@ private:
     sf::Shader  chromAb_;
     bool chromAbReady_ = false;
     float chromAbAmountPx_ = 30.0f;
+    sf::Vector2f chromResCached_{ -1.f, -1.f };
+    float chromAmountCached_{ -1.f };
 
     // ca helpers
     void ensureWorldRT_();

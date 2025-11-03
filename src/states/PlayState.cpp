@@ -19,6 +19,7 @@
 #include "render/SpriteRefs.h"
 #include "render/ScopedView.h"
 #include "render/SpriteScaler.h"
+#include "gfx/Composite.h"
 #include "gfx/ShaderParams.h"
 #include "gfx/ShaderInit.h"
 #include "world/ProcGen.h"
@@ -318,8 +319,13 @@ void PlayState::handleEvent(const sf::Event& e)
     static Input map; 
     const bool inverted = effects_.inverted();
     const auto result = mapKeyPressed(e.key.code, map, inverted);
+    for (auto a : result.actions) actionQueue_.push_back(a);
+}
 
-    for (auto a : result.actions)
+void PlayState::applyActions_()
+{
+    if (actionQueue_.empty()) return;
+    for (auto a : actionQueue_)
     {
         switch (a)
         {
@@ -327,8 +333,7 @@ void PlayState::handleEvent(const sf::Event& e)
             case InputAction::MoveDown:  snake_.setDirection(Direction::Down);  break;
             case InputAction::MoveLeft:  snake_.setDirection(Direction::Left);  break;
             case InputAction::MoveRight: snake_.setDirection(Direction::Right); break;
-            case InputAction::Pause:
-            sm_.push(std::make_unique<PauseState>(sm_, res_)); break;
+            case InputAction::Pause:     sm_.push(std::make_unique<PauseState>(sm_, res_)); break;
 
             case InputAction::TogglePerf:        showPerf_ = !showPerf_; break;
             case InputAction::ToggleBackground:  rr_.toggleBackground(); break;
@@ -341,6 +346,7 @@ void PlayState::handleEvent(const sf::Event& e)
             case InputAction::ToggleUI:          rr_.toggleUI();         break;
         }
     }
+    actionQueue_.clear();
 }
 
 void PlayState::rebuildSnakeOcc_()
@@ -358,6 +364,8 @@ void PlayState::rebuildSnakeOcc_()
 
 void PlayState::update(float dt) 
 {
+    if (dt > 0.1f) dt = 0.1f;
+    applyActions_();
     if (snakeOccDirty_) rebuildSnakeOcc_();
     effects_.update(dt);
     shake_.update(dt);
@@ -834,19 +842,16 @@ void PlayState::draw(sf::RenderTarget& rt)
 
     if (kChromAb)
     {
-        worldRT_.display();
-        sf::Sprite full(worldRT_.getTexture());
-
-        gfx::ChromAbParams cap;
-        cap.res = sf::Glsl::Vec2(static_cast<float>(W), static_cast<float>(H));
-        cap.time = confuseHueT_;
-        cap.amount = chromAbAmountPx_;
-
-        sf::RenderStates rsChrom; rsChrom.shader = &chromAb_;
-        cap.apply(chromAb_);
-
-        render::ScopedView sv(rt, worldView);
-        rt.draw(full, rsChrom);
+        const sf::Vector2f resPx{ static_cast<float>(W), static_cast<float>(H) };
+        gfx::drawChromAbComposite(rt, worldRT_, chromAb_,
+            resPx,
+            confuseHueT_,
+            chromAbAmountPx_,
+            worldView,
+            chromResCached_,      // cache in
+            chromAmountCached_,   // cache in
+            &chromResCached_,     // cache out
+            &chromAmountCached_); // cache out
     }
 
     render::SpriteRefs sref
@@ -874,42 +879,73 @@ void PlayState::draw(sf::RenderTarget& rt)
         gridBatch_.draw(*world);
     }
 
-    if (rr_.portals)
+    // render pass pipeline
+    // --- RenderPass pipeline (WORLD) ---
+    struct Pass 
     {
-        perf::ScopeTimer _(tPortalsMs_);
-        gfx::GlowParams gp;
-        gp.strength = portalGlowStrength_;
-        gp.haloScale = portalHaloScale_;
-        render::drawPortals(*world, cfg_, res_, portals_, portalAnim_,
-            &portalGlow_, portalGlowReady_, gp);
-    }
+        const char* name;
+        bool enabled;
+        std::function<void(sf::RenderTarget&)> draw;  
+    };
+    
+        Pass pipeline[] = 
+        {
+            {"portals",
+            rr_.portals,
+            [&](sf::RenderTarget& w) 
+            {
+                perf::ScopeTimer _(tPortalsMs_);
+                gfx::GlowParams gp;
+                gp.strength = portalGlowStrength_;
+                gp.haloScale = portalHaloScale_;
+                render::drawPortals(w, cfg_, res_, portals_, portalAnim_,
+                &portalGlow_, portalGlowReady_, gp);
+            }
+         },
+            {"items",
+            rr_.items,
+            [&](sf::RenderTarget& w) 
+            {
+                render::drawItems(w, cfg_, apple_.get(),
+                static_cast<render::AppleKind>(static_cast<int>(appleKind_)),
+                appleTTL_, powerups_, sref);
+            }
+         },
+            {"snake",
+            rr_.snake,
+            [&](sf::RenderTarget& w) 
+            {
+                perf::ScopeTimer _(tSnakeMs_);
+                render::drawSnakeBatched(w, snake_, cfg_.cellPx, sref);
+            }
+         },
+            {"explosions",
+            !explFx_.empty(),
+            [&](sf::RenderTarget& w) 
+            {
+                expPosScratch_.clear(); expTScratch_.clear();
+                expPosScratch_.reserve(explFx_.size());
+                expTScratch_.reserve(explFx_.size());
+                for (const auto& fx : explFx_)
+                    {
+                        expPosScratch_.push_back(fx.pos);
+                        expTScratch_.push_back(fx.t);
+                    }
+                    render::drawExplosions(w, sprExpl_, expPosScratch_, expTScratch_, 0.25f);
+            }
+         },
+            {"gate",
+            rr_.gate,
+            [&](sf::RenderTarget& w) 
+            {
+                render::drawGate(w, gateUnlocked_, gateViz_, gatePulse_);
+            }
+         }
+     };
 
-    if (rr_.items)
-    {
-        render::drawItems(*world, cfg_, apple_.get(),
-            static_cast<render::AppleKind>(static_cast<int>(appleKind_)),
-            appleTTL_, powerups_, sref);
-    }
-
-    if (rr_.snake)
-    {
-        perf::ScopeTimer _(tSnakeMs_);
-        render::drawSnakeBatched(*world, snake_, cfg_.cellPx, sref);
-    }
-
-    if (!explFx_.empty())
-    {
-        expPosScratch_.clear(); expTScratch_.clear();
-        expPosScratch_.reserve(explFx_.size());
-        expTScratch_.reserve(explFx_.size());
-        for (const auto& fx : explFx_) { expPosScratch_.push_back(fx.pos); expTScratch_.push_back(fx.t); }
-        render::drawExplosions(*world, sprExpl_, expPosScratch_, expTScratch_, 0.25f);
-    }
-
-    if (rr_.gate)
-    {
-        render::drawGate(*world, gateUnlocked_, gateViz_, gatePulse_);
-    }
+        for (const auto& p : pipeline)
+        if (p.enabled)
+        p.draw(*world);
 
     // chromatic aberration composite
     if (kChromAb)
