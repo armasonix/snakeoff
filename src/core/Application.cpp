@@ -12,8 +12,10 @@ bool Application::init()
 {
     const int W = cfg_.gridWidth * cfg_.cellPx;
     const int H = cfg_.gridHeight * cfg_.cellPx;
-    win_.setSize({ (unsigned)W,(unsigned)H });
-    win_.setView(sf::View(sf::FloatRect(0, 0, (float)W, (float)H)));
+    const float s = cfg_.windowScale; // default scale
+    win_.setSize({ (unsigned)(W * s), (unsigned)(H * s) });
+    sf::View worldView(sf::FloatRect(0, 0, (float)W, (float)H));
+    win_.setView(worldView);
 
     cfg_.loadUserSettings("data/settings.cfg");
     res_.setSoundEnabled(cfg_.soundOn);

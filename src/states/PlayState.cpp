@@ -660,21 +660,26 @@ static sf::Color hsv(float h, float s, float v, sf::Uint8 a = 255)
 void PlayState::draw(sf::RenderTarget& rt)
 {
     const int CELL = cfg_.cellPx;
+    const int W = cfg_.gridWidth * cfg_.cellPx;
+    const int H = cfg_.gridHeight * cfg_.cellPx;
+    sf::View worldView(sf::FloatRect(0.f, 0.f, (float)W, (float)H));
+    sf::View uiView = worldView;
+
+    rt.setView(worldView);
 
     // basic cam
-    sf::View base = win_.getDefaultView();
-
-    // shake a copy of base cam
-    sf::View shaken = base;
+    sf::View shaken = worldView;
     const float offX = std::round(shake_.offsetX());
     const float offY = std::round(shake_.offsetY());
     shaken.move(offX, offY);
-    win_.setView(shaken);
+    rt.setView(shaken);
 
+    // ground
+    if (groundVA_.getVertexCount() > 0) 
     {
-        sf::RenderStates st;
-        st.texture = &res_.txGround();
-        rt.draw(groundVA_, st);
+        sf::RenderStates rs;
+        rs.texture = &res_.txGround();
+        rt.draw(groundVA_, rs);
     }
 
     // prepare sprite scale for grid
@@ -908,7 +913,53 @@ void PlayState::draw(sf::RenderTarget& rt)
     }
     rt.setView(prev);
 
-    if (false && confuseVisT_ > 0.f)
+    // UI: STAGE and HUD
+    {
+        auto prevUI = rt.getView();
+        rt.setView(rt.getDefaultView());
+
+        // STAGE 
+        if (stageTimer_ > 0.f) 
+        {
+            const float kTotal = 2.0f;
+            float t = std::max(0.f, std::min(stageTimer_, kTotal)) / kTotal;
+            sf::Color fill = stageText_.getFillColor();
+            fill.a = static_cast<sf::Uint8>(std::round(255.f * t));
+            sf::Color out = stageText_.getOutlineColor();
+            out.a = fill.a;
+            stageText_.setFillColor(fill);
+            stageText_.setOutlineColor(out);
+
+            const sf::Vector2f center = rt.getDefaultView().getCenter();
+            const auto b = stageText_.getLocalBounds();
+            stageText_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            stageText_.setPosition(std::floor(center.x), std::floor(center.y - 120.f));
+            rt.draw(stageText_);
+        }
+
+        // HUD
+        hud_.draw(rt, score_);
+
+        sf::Text info("", res_.font(), 16);
+        info.setPosition(12.f, 48.f);
+        std::string msg;
+        if (effects_.spdRemain() > 0.f) 
+        {
+            msg += "SPEED x" + std::to_string(effects_.speedMul()) +
+                " (" + std::to_string((int)std::ceil(effects_.spdRemain())) + "s)  ";
+        }
+        if (effects_.invRemain() > 0.f) 
+        {
+            msg += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
+        }
+        info.setString(msg);
+        info.setFillColor(sf::Color(180, 220, 180));
+        rt.draw(info);
+
+        rt.setView(prevUI);
+    }
+
+    if (confuseVisT_ > 0.f)
     {
         {
             // color speed
@@ -988,8 +1039,11 @@ void PlayState::draw(sf::RenderTarget& rt)
         }
 
         // returns base cam — HUD draws by coords
-        win_.setView(base);
+        const auto prevHUD = rt.getView();
+        rt.setView(rt.getDefaultView());
+
         hud_.draw(rt, score_);
+
         {
             sf::Text info("", res_.font(), 16);
             info.setPosition(12.f, 48.f);
@@ -1008,6 +1062,8 @@ void PlayState::draw(sf::RenderTarget& rt)
             info.setFillColor(sf::Color(180, 220, 180));
             rt.draw(info);
         }
+
+        rt.setView(prevHUD);
     }
 }
 

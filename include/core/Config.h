@@ -7,6 +7,7 @@ class Config
 {
 public:
     Config();
+    float windowScale = 1.5f;
     // globals
     float startDelaySec = 0.8f; // T
     int   popupRowsX = 5;       // X
