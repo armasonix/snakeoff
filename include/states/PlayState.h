@@ -22,11 +22,9 @@
 #include <array>
 #include <algorithm>
 
-struct PlayContext;
-
 enum class AppleKind { Normal, Bonus, Poison, Confuse };
 
-class PlayState : public IGameState 
+class PlayState : public IGameState
 {
 public:
     PlayState(class StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res);
@@ -62,10 +60,23 @@ private:
     HUD                     hud_;
     CameraShake             shake_;
 
-    sf::Sound               sfxEat_, sfxDeath_, sfxBonus_, sfxBreak_, sfxPortal_;             
+    sf::Sound               sfxEat_, sfxDeath_, sfxBonus_, sfxBreak_, sfxPortal_;
     float                   timeAcc_{ 0.f };
     float                   startDelay_{ 0.f };
     float                   portalPulseT_ = 0.f;
+
+    // --- world render passes ---
+    void drawWorld_(sf::RenderTarget& world, const sf::View& worldView);
+    void drawWorldBackground_(sf::RenderTarget& world);
+    void drawWorldGrid_(sf::RenderTarget& world);
+    void drawApplesAndPowerups_(sf::RenderTarget& world);
+    void drawSnake_(sf::RenderTarget& world);
+    void drawExplosions_(sf::RenderTarget& world);
+    void drawGate_(sf::RenderTarget& world);
+
+    // --- screen-space overlays ---
+    void drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldView);
+    void drawUI_(sf::RenderTarget& rt);
 
     // rgb colorout
     float confuseVisT_ = 0.f;
@@ -80,12 +91,10 @@ private:
 
     bool initialized_ = false;
     std::mt19937 rng_{ std::random_device{}() };
-    Spawner spawner_;
 
     // EPH: cache of generated obstacles, and toggle state
     std::vector<sf::Vector2i> ephObstacles_;
-    std::vector<sf::Vector2i> tempObstacles_;
-    std::vector<Vec2i> ephCells_;
+    std::vector<Vec2i>        ephCells_;
     bool   ephVisible_ = true;
     float  ephTimer_ = 0.f;
 
@@ -130,7 +139,7 @@ private:
     void  maybeUnlockGate(); // open gate check
     bool  isBorderNonCorner(int x, int y) const;
     void  unlockGate();
-    void  clearGate();
+    void  clearGate() { gateUnlocked_ = false; gateCell_ = Vec2i(-1, -1); }
     void  startLevel(int idx); // reinit level
     int   levelTarget() const { return levelTargets_[std::clamp(levelIndex_, 1, 3) - 1]; }
 
@@ -141,9 +150,6 @@ private:
     sf::Sprite sprBodyCorner_[4];
     sf::Sprite sprPowerBomb_, sprPowerMush_;
     sf::Sprite sprExpl_;
-    // tile ground sprites 
-    std::vector<sf::Sprite> groundTiles_;
-    void rebuildGroundTiles();
 
     sf::VertexArray groundVA_;
     void buildGroundTilemap();
@@ -153,17 +159,17 @@ private:
     float groundSaturation_ = 0.55f;
 
     // texture helpers
-    inline sf::Vector2f cellCenter(int cx, int cy) const 
+    inline sf::Vector2f cellCenter(int cx, int cy) const
     {
         const float cs = static_cast<float>(cfg_.cellPx);
         return { cx * cs + cs * 0.5f, cy * cs + cs * 0.5f };
     }
-    inline void fitSpriteToCell(sf::Sprite & s, const sf::Texture & tx) const 
+    inline void fitSpriteToCell(sf::Sprite& s, const sf::Texture& tx) const
     {
         const auto sz = tx.getSize();
         s.setOrigin(sf::Vector2f(sz.x * 0.5f, sz.y * 0.5f));
         s.setScale(cfg_.cellPx / static_cast<float>(sz.x),
-        cfg_.cellPx / static_cast<float>(sz.y));
+            cfg_.cellPx / static_cast<float>(sz.y));
     }
 
     // vfx explosion
@@ -213,18 +219,8 @@ private:
     bool worldRTReady_ = false;
     sf::Shader  chromAb_;
     bool chromAbReady_ = false;
-    float chromAbAmountPx_ = 3.0f;
+    float chromAbAmountPx_ = 30.0f;
 
     // ca helpers
     void ensureWorldRT_();
-    void drawWorldLayer_(sf::RenderTarget& rt);
-};
-
-struct PlayContext 
-{
-    Config& config;
-    Snake& snake;
-    Score& score;
-    sf::Sound& sfxEat;
-    std::function<void()> flashSnake;
 };

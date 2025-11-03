@@ -4,9 +4,9 @@
 
 namespace fs = std::filesystem;
 
-static bool ensureExists(const std::string& path, const char* kind) 
+static bool ensureExists(const std::string& path, const char* kind)
 {
-    if (!fs::exists(path)) 
+    if (!fs::exists(path))
     {
         std::cerr << "[RES] Missing " << kind << ": " << path << "\n"
             << "      cwd: " << fs::current_path().string() << "\n";
@@ -15,7 +15,7 @@ static bool ensureExists(const std::string& path, const char* kind)
     return true;
 }
 
-void Resources::setSoundEnabled(bool on) 
+void Resources::setSoundEnabled(bool on)
 {
     soundOn_ = on;
 }
@@ -23,19 +23,32 @@ void Resources::setSoundEnabled(bool on)
 void Resources::setMusicEnabled(bool on)
 {
     musicOn_ = on;
-    if (!on) 
+
+    if (!on)
     {
-        if (music_.getStatus() == sf::Music::Playing) music_.pause();
+        if (music_.getStatus() == sf::Music::Playing)
+            music_.pause();
+        return;
     }
-    else 
+
+    // music on
+    if (music_.getStatus() == sf::Music::Paused)
     {
-        if (music_.getStatus() == sf::Music::Paused) music_.play();
+        music_.play();
+        return;
+    }
+
+    if (!currentPath_.empty())
+    {
+        const bool loop =
+            (currentTrack_ == MusicTrack::Menu || currentTrack_ == MusicTrack::Session);
+        openAndPlay_(currentPath_, loop, music_.getVolume(), currentTrack_);
     }
 }
 
 bool Resources::openAndPlay_(const std::string& path, bool loop, float vol, MusicTrack t)
 {
-    if (!musicOn_) 
+    if (!musicOn_)
     {
         currentTrack_ = t;
         currentPath_ = path;
@@ -45,7 +58,7 @@ bool Resources::openAndPlay_(const std::string& path, bool loop, float vol, Musi
     if (music_.getStatus() == sf::Music::Playing && currentPath_ == path)
         return true;
 
-    if (music_.getStatus() == sf::Music::Paused && currentPath_ == path) 
+    if (music_.getStatus() == sf::Music::Paused && currentPath_ == path)
     {
         music_.play();
         currentTrack_ = t;
@@ -94,9 +107,9 @@ void Resources::resumeMusic()
         music_.play();
 }
 
-sf::Music* Resources::music() 
+sf::Music* Resources::music()
 {
-    return musicOn_ ? &music_ : &music_;
+    return musicOn_ ? &music_ : nullptr;
 }
 
 bool Resources::load(const std::string& assetsDir)
@@ -134,10 +147,10 @@ bool Resources::load(const std::string& assetsDir)
     ok &= ensureExists(portalPath, "sound");
     ok &= ensureExists(sfxuihitPath, "sound");
     ok &= ensureExists(sfxuimovePath, "sound");
-    if (!ok) 
+    if (!ok)
     {
         std::cerr << "[RES] One or more asset files are missing. "
-            << "Fix paths or copy assets next to the executable.\n";
+            "Fix paths or copy assets next to the executable.\n";
         return false;
     }
 
@@ -146,12 +159,12 @@ bool Resources::load(const std::string& assetsDir)
         std::cerr << "[RES] SFML failed to load font: " << fontPath << "\n";
         ok = false;
     }
-    if (!eat_->loadFromFile(eatPath)) 
+    if (!eat_->loadFromFile(eatPath))
     {
         std::cerr << "[RES] SFML failed to load sound: " << eatPath << "\n";
         ok = false;
     }
-    if (!death_->loadFromFile(losePath)) 
+    if (!death_->loadFromFile(losePath))
     {
         std::cerr << "[RES] SFML failed to load sound: " << losePath << "\n";
         ok = false;
@@ -187,44 +200,33 @@ bool Resources::load(const std::string& assetsDir)
         ok = false;
     }
 
-    if (!ok) 
+    if (!ok)
     {
         std::cerr << "[RES] Resource loading FAILED (SFX/FONT). "
-        "Will still try to load textures…\n";
-    }
-
-    musicGame_ = std::make_unique<sf::Music>();
-    const std::string gameMusicPath = "assets/music/theme.ogg";
-    if (!musicGame_->openFromFile(gameMusicPath)) 
-    {
-        musicGame_.reset();
-    }
-    else {
-        musicGame_->setLoop(true);
-        musicGame_->setVolume(100.f);
+            "Will still try to load textures…\n";
     }
 
     auto loadTex = [&](std::unique_ptr<sf::Texture>& t, const std::string& path)
-    {
-        t.reset(new sf::Texture());
-        t->setSmooth(true);
-        if (!t->loadFromFile(path)) 
         {
-            std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
-            ok = false;
-        }
-    };
+            t.reset(new sf::Texture());
+            t->setSmooth(true);
+            if (!t->loadFromFile(path))
+            {
+                std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
+                ok = false;
+            }
+        };
 
     auto loadTexRaw = [&](sf::Texture& t, const std::string& name)
-    {
-        const std::string path = G + name;
-        t.setSmooth(true);
-        if (!t.loadFromFile(path))
         {
-            std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
-            ok = false;
-        }
-    };
+            const std::string path = G + name;
+            t.setSmooth(true);
+            if (!t.loadFromFile(path))
+            {
+                std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
+                ok = false;
+            }
+        };
 
     loadTex(txSnakeHead_, G + "sHead.png");
     loadTex(txSnakeBody_, G + "sBody.png");
@@ -244,14 +246,14 @@ bool Resources::load(const std::string& assetsDir)
     loadTex(txGround_, G + "ground.png");
     loadTex(txWall_, G + "wall.png");
     loadTex(txObstacle_, G + "obs.png");
-    if (txGround_) 
+    if (txGround_)
     {
         txGround_->setSmooth(false);
         txGround_->setRepeated(true);
     }
 
     {
-        const char* names[8] = 
+        const char* names[8] =
         {
             "prtl1.png","prtl2.png","prtl3.png","prtl4.png",
             "prtl5.png","prtl6.png","prtl7.png","prtl8.png"
@@ -259,6 +261,7 @@ bool Resources::load(const std::string& assetsDir)
         for (size_t i = 0; i < 8; ++i)
             loadTexRaw(txPortal_[i], names[i]);
     }
+
     soundOn_ = true;
     return ok;
 }

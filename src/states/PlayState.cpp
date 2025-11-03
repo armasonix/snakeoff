@@ -4,6 +4,7 @@
 #include "states/PauseState.h"
 #include "states/GameOverState.h"
 #include "states/VictoryState.h"
+#include "states/PlayContext.h"
 #include "entities/Powerup.h"
 #include "core/StateMachine.h"
 #include "world/ProcGen.h"
@@ -106,6 +107,21 @@ void PlayState::onEnter()
     brFill_.setSize({ 0.f, brSize_.y });
     brFill_.setPosition(brPos_);
     brFill_.setFillColor(sf::Color(50, 205, 50));
+
+    // prepare sprite scale for grid
+    fitSpriteToCell(sprWall_, *sprWall_.getTexture());
+    fitSpriteToCell(sprObs_, *sprObs_.getTexture());
+    fitSpriteToCell(sprApple1_, *sprApple1_.getTexture());
+    fitSpriteToCell(sprApple2_, *sprApple2_.getTexture());
+    fitSpriteToCell(sprApple3_, *sprApple3_.getTexture());
+    fitSpriteToCell(sprPowerBomb_, *sprPowerBomb_.getTexture());
+    fitSpriteToCell(sprPowerMush_, *sprPowerMush_.getTexture());
+    fitSpriteToCell(sprExpl_, *sprExpl_.getTexture());
+    fitSpriteToCell(sprHead_, *sprHead_.getTexture());
+    fitSpriteToCell(sprBody_, *sprBody_.getTexture());
+    fitSpriteToCell(sprTail_, *sprTail_.getTexture());
+    for (int i = 0; i < 4; ++i)
+        fitSpriteToCell(sprBodyCorner_[i], *sprBodyCorner_[i].getTexture());
 
     // EPH
     ephObstacles_ = obstacles;
@@ -250,13 +266,6 @@ bool PlayState::isBorderNonCorner(int x, int y) const
     const bool border = (x == 0 || y == 0 || x == W - 1 || y == H - 1);
     const bool corner = ((x == 0 || x == W - 1) && (y == 0 || y == H - 1));
     return border && !corner;
-}
-
-void PlayState::clearGate()
-{
-    if (gateUnlocked_ && level_.grid().inside(gateCell_)) {}
-    gateUnlocked_ = false;
-    gateCell_ = Vec2i(-1, -1);
 }
 
 void PlayState::unlockGate()
@@ -526,15 +535,6 @@ void PlayState::update(float dt)
     {
         timeAcc_ -= step;
         snake_.step();
-
-        Vec2i next = snake_.head();
-        switch (snake_.direction()) 
-        {
-            case Direction::Up:    --next.y; break;
-            case Direction::Down:  ++next.y; break;
-            case Direction::Left:  --next.x; break;
-            case Direction::Right: ++next.x; break;
-        }
 
         // portals
         {
@@ -907,7 +907,7 @@ void PlayState::drawPortals(sf::RenderTarget& rt)
             {
                 const auto col = portals_[i].color;
                 portalGlow_.setUniform("u_tint", sf::Glsl::Vec3(
-                    col.r / 255.f, col.g / 165.f, col.b / 0.f));
+                    col.r / 255.f, col.g / 255.f, col.b / 255.f));
 
                 const float phase = tAnim * portalGlowPulseHz_ * 6.2831853f;
                 portalGlow_.setUniform("u_time", phase);
@@ -945,46 +945,21 @@ void PlayState::ephApplyHidden()
         level_.setCell(p.x, p.y, Cell::Empty);
 }
 
-// h: [0..360), s/v: [0..1]
-static sf::Color hsv(float h, float s, float v, sf::Uint8 a = 255) 
-{
-    h = std::fmodf(h, 360.f); if (h < 0) h += 360.f;
-    float c = v * s;
-    float x = c * (1.f - std::fabsf(std::fmodf(h / 60.f, 2.f) - 1.f));
-    float m = v - c;
-    float r = 0, g = 0, b = 0;
-    if (h < 60.f) { r = c; g = x; b = 0; }
-    else if (h < 120.f) { r = x; g = c; b = 0; }
-    else if (h < 180.f) { r = 0; g = c; b = x; }
-    else if (h < 240.f) { r = 0; g = x; b = c; }
-    else if (h < 300.f) { r = x; g = 0; b = c; }
-    else { r = c; g = 0; b = x; }
-    auto to8 = [](float u) { return (sf::Uint8)std::clamp<int>(int((u) * 255.f + 0.5f), 0, 255); };
-    return sf::Color(to8(r + m), to8(g + m), to8(b + m), a);
-}
-
 void PlayState::draw(sf::RenderTarget& rt)
 {
-    const int CELL = cfg_.cellPx;
     const int W = cfg_.gridWidth * cfg_.cellPx;
     const int H = cfg_.gridHeight * cfg_.cellPx;
     sf::View worldView(sf::FloatRect(0.f, 0.f, (float)W, (float)H));
-    sf::View uiView = worldView;
 
-    rt.setView(worldView);
-
-    // basic cam
+    // shake
     sf::View shaken = worldView;
-    const float offX = std::round(shake_.offsetX());
-    const float offY = std::round(shake_.offsetY());
-    shaken.move(offX, offY);
-    rt.setView(shaken);
+    shaken.move(std::round(shake_.offsetX()), std::round(shake_.offsetY()));
 
-    // chromatic aberration
+    // chromatic aberration pass
     const bool kChromAb = (confuseVisT_ > 0.f) && chromAbReady_;
     sf::RenderTarget* world = &rt;
 
-    if (kChromAb) 
+    if (kChromAb)
     {
         ensureWorldRT_();
         worldRT_.clear(sf::Color::Black);
@@ -992,133 +967,186 @@ void PlayState::draw(sf::RenderTarget& rt)
         world = &worldRT_;
     }
 
-    // ground
-    if (groundVA_.getVertexCount() > 0) 
+    // world pass
+    drawWorld_(*world, shaken);
+
+    // composite chromAb
+    if (kChromAb)
     {
-        sf::RenderStates rs;
-        rs.texture = &res_.txGround();
-        if (groundDesatReady_) rs.shader = &groundDesat_;
-        world->draw(groundVA_, rs);
+        worldRT_.display();
+        sf::Sprite full(worldRT_.getTexture());
+        chromAb_.setUniform("u_res", sf::Glsl::Vec2((float)W, (float)H));
+        chromAb_.setUniform("u_time", confuseHueT_);
+        chromAb_.setUniform("u_amount", chromAbAmountPx_);
+        sf::RenderStates rsChrom; rsChrom.shader = &chromAb_;
+        rt.setView(worldView);
+        rt.draw(full, rsChrom);
     }
 
-    // prepare sprite scale for grid
-    fitSpriteToCell(sprWall_, *sprWall_.getTexture());
-    fitSpriteToCell(sprObs_, *sprObs_.getTexture());
-    fitSpriteToCell(sprApple1_, *sprApple1_.getTexture());
-    fitSpriteToCell(sprApple2_, *sprApple2_.getTexture());
-    fitSpriteToCell(sprApple3_, *sprApple3_.getTexture());
-    fitSpriteToCell(sprPowerBomb_, *sprPowerBomb_.getTexture());
-    fitSpriteToCell(sprPowerMush_, *sprPowerMush_.getTexture());
-    fitSpriteToCell(sprExpl_, *sprExpl_.getTexture());
-    fitSpriteToCell(sprHead_, *sprHead_.getTexture());
-    fitSpriteToCell(sprBody_, *sprBody_.getTexture());
-    fitSpriteToCell(sprTail_, *sprTail_.getTexture());
-    for (int i = 0; i < 4; ++i)
-        fitSpriteToCell(sprBodyCorner_[i], *sprBodyCorner_[i].getTexture());
+    // confuse overlay world space
+    drawConfuseOverlay_(rt, worldView);
 
-    // grid: walls and obs
+    // UI block default view
+    drawUI_(rt);
+
+    if (confuseVisT_ > 0.f && apple_)
+    {
+        const int CELL = cfg_.cellPx;
+        const auto c = apple_->cell();
+        const float px = static_cast<float>(c.x * CELL);
+        const float py = static_cast<float>(c.y * CELL);
+
+        sf::Color col = sf::Color(200, 200, 200);
+        switch (appleKind_)
+        {
+        case AppleKind::Bonus:   col = sf::Color(255, 215, 0);   break;
+        case AppleKind::Poison:  col = sf::Color(170, 80, 200); break;
+        case AppleKind::Confuse: col = sf::Color(80, 200, 200); break;
+        default: break;
+        }
+
+        float ttlTotal = 0.f;
+        switch (appleKind_)
+        {
+        case AppleKind::Bonus:   ttlTotal = cfg_.apple.bonusTTL;   break;
+        case AppleKind::Poison:  ttlTotal = cfg_.apple.poisonTTL;  break;
+        case AppleKind::Confuse: ttlTotal = cfg_.apple.confuseTTL; break;
+        default: break;
+        }
+
+        if (ttlTotal > 0.f && appleTTL_ > 0.f)
+        {
+            const float frac = std::clamp(appleTTL_ / ttlTotal, 0.f, 1.f);
+            const float w = (CELL - 2) * frac;
+            sf::RectangleShape bar({ w, 4.f });
+            bar.setPosition(px + 1.f, py - 5.f);
+
+            auto prev = rt.getView();
+            rt.setView(worldView);
+            bar.setFillColor(col);
+            rt.draw(bar);
+            rt.setView(prev);
+        }
+    }
+}
+
+// helpers: world background tilemap
+void PlayState::drawWorldBackground_(sf::RenderTarget& world)
+{
+    if (groundVA_.getVertexCount() == 0) return;
+    sf::RenderStates rs;
+    rs.texture = &res_.txGround();
+    if (groundDesatReady_) rs.shader = &groundDesat_;
+    world.draw(groundVA_, rs);
+}
+
+// helpers: walls and obstacles grid
+void PlayState::drawWorldGrid_(sf::RenderTarget& world)
+{
     for (int y = 0; y < level_.grid().h(); ++y)
     {
         for (int x = 0; x < level_.grid().w(); ++x)
         {
             const auto pos = cellCenter(x, y);
-            if (level_.grid().isBorder(x, y)) 
+            if (level_.grid().isBorder(x, y))
             {
                 sprWall_.setRotation(0.f);
                 sprWall_.setPosition(pos);
-                world->draw(sprWall_);
+                world.draw(sprWall_);
             }
-            else if (level_.grid().isObstacle(x, y)) 
+            else if (level_.grid().isObstacle(x, y))
             {
                 sprObs_.setRotation(0.f);
                 sprObs_.setPosition(pos);
-                world->draw(sprObs_);
+                world.draw(sprObs_);
             }
         }
     }
+}
 
-    drawPortals(*world);
-
-    // apples vars
-    if (apple_) 
+// helpers: apples and powerups
+void PlayState::drawApplesAndPowerups_(sf::RenderTarget& world)
+{
+    if (apple_)
     {
         const auto c = apple_->cell();
         const auto pos = cellCenter(c.x, c.y);
-        sf::Sprite * s = &sprApple1_;
-        switch (appleKind_) 
+        sf::Sprite* s = &sprApple1_;
+        switch (appleKind_)
         {
-            case AppleKind::Bonus:   s = &sprApple2_; break;
-            case AppleKind::Poison:  s = &sprApple3_; break;
-            case AppleKind::Confuse: s = &sprPowerMush_; break;
+            case AppleKind::Bonus:   s = &sprApple2_;   break;
+            case AppleKind::Poison:  s = &sprApple3_;   break;
+            case AppleKind::Confuse: s = &sprPowerMush_;break;
             default: break;
         }
         s->setRotation(0.f);
         s->setPosition(pos);
-        world->draw(*s);
+        world.draw(*s);
     }
 
-    // powerups
-    for (const auto& p : powerups_) 
+    for (const auto& p : powerups_)
     {
         const auto pos = cellCenter(p.cellX, p.cellY);
-        sf::Sprite * s = nullptr;
+        sf::Sprite* s = nullptr;
         if (p.kind == PowerUpKind::Breaker) s = &sprPowerBomb_;
-        else /* PowerUpKind::Confuse */ s = &sprPowerMush_;
-        if (s) 
+        else                                s = &sprPowerMush_;
+        if (s)
         {
             s->setRotation(0.f);
             s->setPosition(pos);
-            world->draw(*s);
+            world.draw(*s);
         }
     }
+}
 
-    // snake: head/body/tail
+// helpers: snake
+void PlayState::drawSnake_(sf::RenderTarget& world)
+{
     const auto& body = snake_.body();
-    if (!body.empty()) 
+    if (body.empty()) return;
+
+    // head
     {
-        // head
-        {
         Vec2i h = body.front();
         float rot = 0.f;
-        if (body.size() >= 2) 
-            {
-                Vec2i n = *(body.begin() + 1);
-                Vec2i d{ h.x - n.x, h.y - n.y };
-                if (d.x == 1) rot = 0.f;        // r
-                else if (d.x == -1) rot = 180.f;// l
-                else if (d.y == 1) rot = 90.f;  // d
-                else if (d.y == -1) rot = 270.f;// u
-            }
-            sprHead_.setRotation(rot);
-            sprHead_.setPosition(cellCenter(h.x, h.y));
-            world->draw(sprHead_);
-        }
-        // body
-        for (size_t i = 1; i + 1 < body.size(); ++i) 
+        if (body.size() >= 2)
         {
-            const Vec2i prev = body[i - 1];
-            const Vec2i c = body[i];
-            const Vec2i next = body[i + 1];
-            const int dx1 = c.x - prev.x;
-            const int dy1 = c.y - prev.y;
-            const int dx2 = next.x - c.x;
-            const int dy2 = next.y - c.y;
-            const bool straightH = (dy1 == 0 && dy2 == 0);
-            const bool straightV = (dx1 == 0 && dx2 == 0);
-            const bool corner = !(straightH || straightV);
-            const sf::Vector2f pos = cellCenter(c.x, c.y);
+            Vec2i n = *(body.begin() + 1);
+            Vec2i d{ h.x - n.x, h.y - n.y };
+            if (d.x == 1)       rot = 0.f;      // r
+            else if (d.x == -1) rot = 180.f;    // l
+            else if (d.y == 1)  rot = 90.f;     // d
+            else if (d.y == -1) rot = 270.f;    // u
+        }
+        sprHead_.setRotation(rot);
+        sprHead_.setPosition(cellCenter(h.x, h.y));
+        world.draw(sprHead_);
+    }
 
-            if (!corner) 
-            {
-                sprBody_.setRotation(straightV ? 90.f : 0.f);
-                sprBody_.setPosition(pos);
-                world->draw(sprBody_);
-            }
-            else 
-            {
+    // body & corners
+    for (size_t i = 1; i + 1 < body.size(); ++i)
+    {
+        const Vec2i prev = body[i - 1];
+        const Vec2i c = body[i];
+        const Vec2i next = body[i + 1];
+        const int dx1 = c.x - prev.x, dy1 = c.y - prev.y;
+        const int dx2 = next.x - c.x, dy2 = next.y - c.y;
+        const bool straightH = (dy1 == 0 && dy2 == 0);
+        const bool straightV = (dx1 == 0 && dx2 == 0);
+        const bool corner = !(straightH || straightV);
+        const sf::Vector2f pos = cellCenter(c.x, c.y);
+
+        if (!corner)
+        {
+            sprBody_.setRotation(straightV ? 90.f : 0.f);
+            sprBody_.setPosition(pos);
+            world.draw(sprBody_);
+        }
+        else
+        {
             const bool hasLeft = (prev.x == c.x - 1) || (next.x == c.x - 1);
             const bool hasRight = (prev.x == c.x + 1) || (next.x == c.x + 1);
-            const bool hasUp = (prev.y == c.y - 1) || (next.y == c.y - 1); 
+            const bool hasUp = (prev.y == c.y - 1) || (next.y == c.y - 1);
             const bool hasDown = (prev.y == c.y + 1) || (next.y == c.y + 1);
             int idx = 0;
             if (hasLeft && hasDown)       idx = 0;
@@ -1129,360 +1157,209 @@ void PlayState::draw(sf::RenderTarget& rt)
             auto& s = sprBodyCorner_[idx];
             s.setRotation(0.f);
             s.setPosition(pos);
-            world->draw(s);
-            }
-        }
-        // tail
-        if (body.size() >= 2) 
-        {
-            Vec2i t = body.back();
-            Vec2i prev = *(body.end() - 2);
-            const Vec2i d = { prev.x - t.x, prev.y - t.y };
-            float rot = 0.f;
-            if (d.x == 1)       rot = 0.f;
-            else if (d.x == -1) rot = 180.f;
-            else if (d.y == 1)  rot = 90.f;
-            else if (d.y == -1) rot = 270.f;
-            rot += 180.f; if (rot >= 360.f) rot -= 360.f;
-            const sf::Vector2f base = sprTail_.getScale();
-            sf::Vector2f cur = base;
-            if (rot == 0.f || rot == 180.f) cur.x *= 1.15f;
-            else                             cur.y *= 1.15f;
-            sprTail_.setRotation(rot);
-            sprTail_.setScale(cur);
-            sprTail_.setPosition(cellCenter(t.x, t.y));
-            world->draw(sprTail_);
-            sprTail_.setScale(base);
+            world.draw(s);
         }
     }
 
-    // explosion vfx
+    // tail
+    if (body.size() >= 2)
     {
-        constexpr float kLife = 0.25f;
+        Vec2i t = body.back();
+        Vec2i prev = *(body.end() - 2);
+        const Vec2i d = { prev.x - t.x, prev.y - t.y };
+        float rot = 0.f;
+        if (d.x == 1)       rot = 0.f;
+        else if (d.x == -1) rot = 180.f;
+        else if (d.y == 1)  rot = 90.f;
+        else if (d.y == -1) rot = 270.f;
+        rot += 180.f; if (rot >= 360.f) rot -= 360.f;
 
-        sf::RenderStates rs;
-        rs.texture = sprExpl_.getTexture();
-        rs.blendMode = sf::BlendAdd;
+        const sf::Vector2f base = sprTail_.getScale();
+        sf::Vector2f cur = base;
+        if (rot == 0.f || rot == 180.f) cur.x *= 1.15f;
+        else                             cur.y *= 1.15f;
 
-        for (const auto& fx : explFx_)
-        {
-            const float tNorm = 1.0f - std::clamp(fx.t / kLife, 0.0f, 1.0f);
-            const float sc = 0.90f + 1.10f * tNorm;
-            const sf::Uint8 A = static_cast<sf::Uint8>(255.0f * std::sqrt(std::max(0.0f, 1.0f - tNorm)));
-
-            sf::Sprite s = sprExpl_;
-            s.setPosition(fx.pos);
-            s.setScale(sc, sc);
-            s.setColor(sf::Color(255, 255, 255, A));
-
-            world->draw(s, rs);
-        }
+        sprTail_.setRotation(rot);
+        sprTail_.setScale(cur);
+        sprTail_.setPosition(cellCenter(t.x, t.y));
+        world.draw(sprTail_);
+        sprTail_.setScale(base);
     }
+}
 
-    if (gateUnlocked_) 
+// helpers: explosion
+void PlayState::drawExplosions_(sf::RenderTarget& world)
+{
+    constexpr float kLife = 0.25f;
+    sf::RenderStates rs;
+    rs.texture = sprExpl_.getTexture();
+    rs.blendMode = sf::BlendAdd;
+
+    for (const auto& fx : explFx_)
     {
-        // alpha pulse
-        gatePulse_ += 0.8f * (1.f / 60.f);
-        float a = 180.f + 60.f * std::sin(gatePulse_ * 6.28318f);
-        auto col = gateViz_.getFillColor();
-        col.a = (sf::Uint8)std::clamp<int>(int(a), 0, 255);
-        gateViz_.setFillColor(col);
-        world->draw(gateViz_);
+        const float tNorm = 1.0f - std::clamp(fx.t / kLife, 0.0f, 1.0f);
+        const float sc = 0.90f + 1.10f * tNorm;
+        const sf::Uint8 A = static_cast<sf::Uint8>(255.0f * std::sqrt(std::max(0.0f, 1.0f - tNorm)));
+
+        sf::Sprite s = sprExpl_;
+        s.setPosition(fx.pos);
+        s.setScale(sc, sc);
+        s.setColor(sf::Color(255, 255, 255, A));
+        world.draw(s, rs);
     }
+}
 
-    // chromatic aberration
-    if (kChromAb) 
-    {
-        worldRT_.display();
+// helpers: gate
+void PlayState::drawGate_(sf::RenderTarget& world)
+{
+    if (!gateUnlocked_) return;
+    gatePulse_ += 0.8f * (1.f / 60.f);
+    float a = 180.f + 60.f * std::sin(gatePulse_ * 6.28318f);
+    auto col = gateViz_.getFillColor();
+    col.a = (sf::Uint8)std::clamp<int>(int(a), 0, 255);
+    gateViz_.setFillColor(col);
+    world.draw(gateViz_);
+}
 
-        sf::Sprite full(worldRT_.getTexture());
-        chromAb_.setUniform("u_res", sf::Glsl::Vec2((float)W, (float)H));
-        chromAb_.setUniform("u_time", confuseHueT_);
-        chromAb_.setUniform("u_amount", 30.0f);
+// helpers: aggregate world pass
+void PlayState::drawWorld_(sf::RenderTarget& world, const sf::View& worldView)
+{
+    world.setView(worldView);
+    drawWorldBackground_(world);
+    drawWorldGrid_(world);
+    drawPortals(world);
+    drawApplesAndPowerups_(world);
+    drawSnake_(world);
+    drawExplosions_(world);
+    drawGate_(world);
+}
 
-        sf::RenderStates rsChrom;
-        rsChrom.shader = &chromAb_;
-        rt.setView(worldView);
-        rt.draw(full, rsChrom);
-    }
+// helpers: confuse overlay
+void PlayState::drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldView)
+{
+    if (!(confuseVisT_ > 0.f && confuseOverlayReady_)) return;
+    const int Wpx = cfg_.gridWidth * cfg_.cellPx;
+    const int Hpx = cfg_.gridHeight * cfg_.cellPx;
+
+    sf::RectangleShape cover({ (float)Wpx, (float)Hpx });
+    cover.setPosition(0.f, 0.f);
+
+    confuseOverlay_.setUniform("u_time", confuseHueT_ * confusePulseSpeed_);
+    confuseOverlay_.setUniform("u_res", sf::Glsl::Vec2((float)Wpx, (float)Hpx));
+
+    sf::RenderStates rs;
+    rs.shader = &confuseOverlay_;
+    rs.blendMode = sf::BlendAdd;
 
     auto prev = rt.getView();
+    rt.setView(worldView);
+    rt.draw(cover, rs);
+    rt.setView(prev);
+}
+
+// helpers: full UI block default view
+void PlayState::drawUI_(sf::RenderTarget& rt)
+{
+    auto prevUI = rt.getView();
     rt.setView(rt.getDefaultView());
-    if (snake_.breakerTimeLeft() > 0.f) 
+
+    // stages overlay
+    if (stageTimer_ > 0.f)
+    {
+        const float kTotal = 2.0f;
+        float t = std::max(0.f, std::min(stageTimer_, kTotal)) / kTotal;
+        sf::Color fill = stageText_.getFillColor(); fill.a = (sf::Uint8)std::round(255.f * t);
+        sf::Color out = stageText_.getOutlineColor(); out.a = fill.a;
+        stageText_.setFillColor(fill);
+        stageText_.setOutlineColor(out);
+
+        const sf::Vector2f center = rt.getDefaultView().getCenter();
+        const auto b = stageText_.getLocalBounds();
+        stageText_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+        stageText_.setPosition(std::floor(center.x), std::floor(center.y - 120.f));
+        rt.draw(stageText_);
+    }
+
+    // HUD: score
+    {
+        scoreRGB_.setString("Score: " + std::to_string(score_.value()));
+        const float phase = scoreRGBElapsed_ * 2.5f * 6.2831853f;
+        auto ch = [&](float p)->sf::Uint8
+            {
+                float s = 0.5f + 0.5f * std::sin(phase + p);
+                return (sf::Uint8)std::round(255.f * s);
+            };
+        const sf::Uint8 R = ch(0.0f), G = ch(2.0943951f), B = ch(4.1887902f);
+        scoreRGB_.setFillColor(sf::Color(R, G, B, 255));
+        scoreRGB_.setOutlineColor(sf::Color(0, 0, 0, 220));
+        const auto b = scoreRGB_.getLocalBounds();
+        scoreRGB_.setOrigin(b.left + b.width, b.top);
+        const sf::View& dv = rt.getDefaultView();
+        const float right = std::floor(dv.getCenter().x + dv.getSize().x * 0.5f);
+        const float top = std::floor(dv.getCenter().y - dv.getSize().y * 0.5f);
+        scoreRGB_.setPosition(right - 12.f, top + 12.f);
+        rt.draw(scoreRGB_);
+    }
+
+    // HUD: speed/invert info
+    {
+        sf::Text info("", res_.font(), 16);
+        info.setPosition(12.f, 48.f);
+        std::string msg;
+        if (effects_.spdRemain() > 0.f)
+            msg += "SPEED x" + std::to_string(effects_.speedMul()) +
+            " (" + std::to_string((int)std::ceil(effects_.spdRemain())) + "s)  ";
+        if (effects_.invRemain() > 0.f)
+            msg += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
+        info.setString(msg);
+        info.setFillColor(sf::Color(180, 220, 180));
+        rt.draw(info);
+    }
+
+    // HUD: breaker progress bar
+    if (snake_.breakerTimeLeft() > 0.f)
     {
         rt.draw(brBack_);
         rt.draw(brFill_);
         rt.draw(brText_);
     }
-    rt.setView(prev);
 
-    // confuse overlay
-    if (confuseVisT_ > 0.f && confuseOverlayReady_) 
-    {
-        const int Wpx = cfg_.gridWidth * cfg_.cellPx;
-        const int Hpx = cfg_.gridHeight * cfg_.cellPx;
-
-        sf::RectangleShape cover({ (float)Wpx, (float)Hpx });
-        cover.setPosition(0.f, 0.f);
-
-        confuseOverlay_.setUniform("u_time", confuseHueT_* confusePulseSpeed_);
-        confuseOverlay_.setUniform("u_res", sf::Glsl::Vec2((float)Wpx, (float)Hpx));
-
-        sf::RenderStates rs;
-        rs.shader = &confuseOverlay_;
-        rs.blendMode = sf::BlendAdd;
-        rt.draw(cover, rs);
-    }
-
-    // UI: STAGE and HUD
-    {
-        auto prevUI = rt.getView();
-        rt.setView(rt.getDefaultView());
-
-        // STAGE 
-        if (stageTimer_ > 0.f) 
+    // banners
+    auto drawBanner = [&](sf::Text& t, float lifeT, float elapsed, float yOff)
         {
-            const float kTotal = 2.0f;
-            float t = std::max(0.f, std::min(stageTimer_, kTotal)) / kTotal;
-            sf::Color fill = stageText_.getFillColor();
-            fill.a = static_cast<sf::Uint8>(std::round(255.f * t));
-            sf::Color out = stageText_.getOutlineColor();
-            out.a = fill.a;
-            stageText_.setFillColor(fill);
-            stageText_.setOutlineColor(out);
+            if (!(lifeT > 0.f)) return;
+            const float dur = 1.6f;
+            const float tt = 1.0f - std::max(0.0f, std::min(lifeT / dur, 1.0f));
 
-            const sf::Vector2f center = rt.getDefaultView().getCenter();
-            const auto b = stageText_.getLocalBounds();
-            stageText_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
-            stageText_.setPosition(std::floor(center.x), std::floor(center.y - 120.f));
-            rt.draw(stageText_);
-        }
-
-        // HUD
-        {
-            scoreRGB_.setString("Score: " + std::to_string(score_.value()));
-
-            const float phase = scoreRGBElapsed_ * 2.5f * 6.2831853f;
+            const float phase = elapsed * 2.5f * 6.2831853f;
             auto ch = [&](float p)->sf::Uint8
                 {
-                float s = 0.5f + 0.5f * std::sin(phase + p);
-                return static_cast<sf::Uint8>(std::round(255.f * s));
+                    float s = 0.5f + 0.5f * std::sin(phase + p);
+                    return (sf::Uint8)std::round(255.f * s);
                 };
-            const sf::Uint8 R = ch(0.0f);
-            const sf::Uint8 G = ch(2.0943951f);
-            const sf::Uint8 B = ch(4.1887902f);
-            scoreRGB_.setFillColor(sf::Color(R, G, B, 255));
-            scoreRGB_.setOutlineColor(sf::Color(0, 0, 0, 220));
+            const sf::Uint8 R = ch(0.0f), G = ch(2.0943951f), B = ch(4.1887902f);
 
-            const auto b = scoreRGB_.getLocalBounds();
-            scoreRGB_.setOrigin(b.left + b.width, b.top);
+            const float fade = std::sin(3.1415926f * tt);
+            const sf::Uint8 A = (sf::Uint8)std::round(255.f * fade);
 
-            const sf::View& dv = rt.getDefaultView();
-            const float right = std::floor(dv.getCenter().x + dv.getSize().x * 0.5f);
-            const float top = std::floor(dv.getCenter().y - dv.getSize().y * 0.5f);
+            sf::Color fill(R, G, B, A);
+            sf::Color out = t.getOutlineColor(); out.a = A;
+            t.setFillColor(fill);
+            t.setOutlineColor(out);
 
-            const float pad = 12.f;
-            scoreRGB_.setPosition(right - pad, top + pad);
+            const sf::Vector2f c = rt.getDefaultView().getCenter();
+            t.setPosition(std::floor(c.x), std::floor(c.y + yOff));
+            rt.draw(t);
+        };
 
-            rt.draw(scoreRGB_);
-        }
+    drawBanner(breakerBanner_, breakerBannerT_, breakerBannerElapsed_, -100.f);
+    drawBanner(turboBanner_, turboBannerT_, turboBannerElapsed_, -60.f);
+    drawBanner(poisonBanner_, poisonBannerT_, poisonBannerElapsed_, -20.f);
 
-        sf::Text info("", res_.font(), 16);
-        info.setPosition(12.f, 48.f);
-        std::string msg;
-        if (effects_.spdRemain() > 0.f) 
-        {
-            msg += "SPEED x" + std::to_string(effects_.speedMul()) +
-                " (" + std::to_string((int)std::ceil(effects_.spdRemain())) + "s)  ";
-        }
-        if (effects_.invRemain() > 0.f) 
-        {
-            msg += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
-        }
-        info.setString(msg);
-        info.setFillColor(sf::Color(180, 220, 180));
-        rt.draw(info);
-
-        rt.setView(prevUI);
-    }
-
-    // wallbreaker banner
-    if (breakerBannerT_ > 0.f)
-    {
-        const float dur = 1.6f;
-        const float t = 1.0f - std::max(0.0f, std::min(breakerBannerT_ / dur, 1.0f));
-
-        // rgb
-        const float phase = breakerBannerElapsed_ * 2.5f * 6.2831853f;
-        auto ch = [&](float p) -> sf::Uint8 
-            {
-            float s = 0.5f + 0.5f * std::sin(phase + p);
-            return static_cast<sf::Uint8>(std::round(255.f * s));
-            };
-        const sf::Uint8 R = ch(0.0f);
-        const sf::Uint8 G = ch(2.0943951f);
-        const sf::Uint8 B = ch(4.1887902f);
-
-        const float fade = std::sin(3.1415926f * t);
-        const sf::Uint8 A = static_cast<sf::Uint8>(std::round(255.f * fade));
-
-        sf::Color fill(R, G, B, A);
-        sf::Color out = breakerBanner_.getOutlineColor(); out.a = A;
-        breakerBanner_.setFillColor(fill);
-        breakerBanner_.setOutlineColor(out);
-
-        const sf::Vector2f c = rt.getDefaultView().getCenter();
-        breakerBanner_.setPosition(std::floor(c.x), std::floor(c.y - 100.f));
-        rt.draw(breakerBanner_);
-    }
-
-    // turbosnake banner
-    if (turboBannerT_ > 0.f)
-    {
-        const float dur = 1.6f;
-        const float t = 1.0f - std::max(0.0f, std::min(turboBannerT_ / dur, 1.0f));
-
-        const float phase = turboBannerElapsed_ * 2.5f * 6.2831853f;
-        auto ch = [&](float p)->sf::Uint8 
-            {
-            float s = 0.5f + 0.5f * std::sin(phase + p);
-            return static_cast<sf::Uint8>(std::round(255.f * s));
-            };
-        const sf::Uint8 R = ch(0.0f);
-        const sf::Uint8 G = ch(2.0943951f);
-        const sf::Uint8 B = ch(4.1887902f);
-
-        const float fade = std::sin(3.1415926f * t);
-        const sf::Uint8 A = static_cast<sf::Uint8>(std::round(255.f * fade));
-
-        sf::Color fill(R, G, B, A);
-        sf::Color out = turboBanner_.getOutlineColor(); out.a = A;
-        turboBanner_.setFillColor(fill);
-        turboBanner_.setOutlineColor(out);
-
-        const sf::Vector2f c = rt.getDefaultView().getCenter();
-        turboBanner_.setPosition(std::floor(c.x), std::floor(c.y - 60.f));
-        rt.draw(turboBanner_);
-    }
-
-    // poison banner (YOU GOT THE POISON)
-    if (poisonBannerT_ > 0.f)
-    {
-        const float dur = 1.6f;
-        const float t = 1.0f - std::max(0.0f, std::min(poisonBannerT_ / dur, 1.0f));
-        
-        const float phase = poisonBannerElapsed_ * 2.5f * 6.2831853f;
-        auto ch = [&](float p)->sf::Uint8
-            {
-            float s = 0.5f + 0.5f * std::sin(phase + p);
-            return static_cast<sf::Uint8>(std::round(255.f * s));
-            };
-        const sf::Uint8 R = ch(0.0f);
-        const sf::Uint8 G = ch(2.0943951f);
-        const sf::Uint8 B = ch(4.1887902f);
-
-        const float fade = std::sin(3.1415926f * t);
-        const sf::Uint8 A = static_cast<sf::Uint8>(std::round(255.f * fade));
-
-        sf::Color fill(R, G, B, A);
-        sf::Color out = poisonBanner_.getOutlineColor(); out.a = A;
-        poisonBanner_.setFillColor(fill);
-        poisonBanner_.setOutlineColor(out);
-
-        const sf::Vector2f c = rt.getDefaultView().getCenter();
-        poisonBanner_.setPosition(std::floor(c.x), std::floor(c.y - 20.f));
-        rt.draw(poisonBanner_);
-    }
-
-    if (confuseVisT_ > 0.f)
-    {
-        if (apple_)
-        {
-            const auto c = apple_->cell();
-            const float px = static_cast<float>(c.x * CELL);
-            const float py = static_cast<float>(c.y * CELL);
-
-            sf::Color col = sf::Color(200, 200, 200);
-            switch (appleKind_)
-            {
-            case AppleKind::Bonus:   col = sf::Color(255, 215, 0);   break; // gold
-            case AppleKind::Poison:  col = sf::Color(170, 80, 200); break; // purple
-            case AppleKind::Confuse: col = sf::Color(80, 200, 200); break; // cyan
-            default: break;
-            }
-
-            if (appleTTL_ > 0.f)
-            {
-                float ttlTotal = 0.f;
-                switch (appleKind_)
-                {
-                case AppleKind::Bonus:   ttlTotal = cfg_.apple.bonusTTL;   break;
-                case AppleKind::Poison:  ttlTotal = cfg_.apple.poisonTTL;  break;
-                case AppleKind::Confuse: ttlTotal = cfg_.apple.confuseTTL; break;
-                default: break;
-                }
-                if (ttlTotal > 0.f)
-                {
-                    const float frac = std::clamp(appleTTL_ / ttlTotal, 0.f, 1.f);
-                    const float w = (CELL - 2) * frac;
-                    sf::RectangleShape bar({ w, 4.f });
-                    bar.setPosition(px + 1.f, py - 5.f);
-                    bar.setFillColor(col);
-                    rt.draw(bar);
-                }
-            }
-        }
-
-        // STAGE overlay
-        if (stageTimer_ > 0.f)
-        {
-            auto prevUI = rt.getView();
-            rt.setView(rt.getDefaultView());
-
-            const float kTotal = 2.0f;
-            float t = std::max(0.f, std::min(stageTimer_, kTotal)) / kTotal;
-            sf::Color fill = stageText_.getFillColor();
-            fill.a = static_cast<sf::Uint8>(std::round(255.f * t));
-            sf::Color out = stageText_.getOutlineColor();
-            out.a = fill.a;
-            stageText_.setFillColor(fill);
-            stageText_.setOutlineColor(out);
-
-            const sf::Vector2f center = win_.getView().getCenter();
-            const auto b = stageText_.getLocalBounds();
-            stageText_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
-            stageText_.setPosition(std::floor(center.x), std::floor(center.y - 120.f));
-
-            rt.draw(stageText_);
-            rt.setView(prevUI);
-        }
-
-        // returns base cam — HUD draws by coords
-        const auto prevHUD = rt.getView();
-        rt.setView(rt.getDefaultView());
-
-        {
-            sf::Text info("", res_.font(), 16);
-            info.setPosition(12.f, 48.f);
-            std::string msg;
-
-            if (effects_.spdRemain() > 0.f)
-            {
-                msg += "SPEED x" + std::to_string(effects_.speedMul()) +
-                    " (" + std::to_string((int)std::ceil(effects_.spdRemain())) + "s)  ";
-            }
-            if (effects_.invRemain() > 0.f)
-            {
-                msg += "CONFUSE (" + std::to_string((int)std::ceil(effects_.invRemain())) + "s)";
-            }
-            info.setString(msg);
-            info.setFillColor(sf::Color(180, 220, 180));
-            rt.draw(info);
-        }
-
-        rt.setView(prevHUD);
-    }
+    rt.setView(prevUI);
 }
+
+
 
 void PlayState::spawnApple()
 {
