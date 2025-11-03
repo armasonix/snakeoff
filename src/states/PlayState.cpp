@@ -153,6 +153,41 @@ void PlayState::onEnter()
         confuseOverlayReady_ = confuseOverlay_.loadFromMemory(frag, sf::Shader::Fragment);
     }
 
+    // chromatic aberration shader
+    {
+        const char* frag = R"(
+        uniform sampler2D texture;
+        uniform vec2  u_res;
+        uniform float u_amount;
+        uniform float u_time;
+
+        void main() 
+        {
+            vec2 uv = gl_TexCoord[0].xy;
+
+            vec2 center = vec2(0.5, 0.5);
+            vec2 d = uv - center;
+            float r = length(d) + 1e-6;
+
+            float amtUV = (u_amount / u_res.x) * (0.95 + 0.15 * sin(u_time * 6.2831853));
+            vec2 dir = d / r;
+
+            vec2 off = dir * amtUV * r * 2.0;
+
+            float rr = texture2D(texture, uv + off).r;
+            float gg = texture2D(texture, uv).g;
+            float bb = texture2D(texture, uv - off).b;
+
+            vec4 src = texture2D(texture, uv);
+            gl_FragColor = vec4(rr, gg, bb, src.a);
+        })";
+        chromAbReady_ = chromAb_.loadFromMemory(frag, sf::Shader::Fragment);
+        if (chromAbReady_) 
+        {
+            chromAb_.setUniform("texture", sf::Shader::CurrentTexture);
+        }
+    }
+
     // --- portal emissive glow shader init ---
     {
         const char* frag = R"(
@@ -186,7 +221,8 @@ void PlayState::onEnter()
             gl_FragColor = vec4(glow, g);
         })";
         portalGlowReady_ = portalGlow_.loadFromMemory(frag, sf::Shader::Fragment);
-        if (portalGlowReady_) {
+        if (portalGlowReady_) 
+        {
             portalGlow_.setUniform("texture", sf::Shader::CurrentTexture);
         }
     }
@@ -423,7 +459,7 @@ void PlayState::update(float dt)
         }
     }
 
-    // confuse music downtempo
+    // confuse music uptempo
     {
         const bool activeNow = (confuseVisT_ > 0.0001f);
 
@@ -431,7 +467,7 @@ void PlayState::update(float dt)
         {
             if (auto* mg = res_.music())
             {
-                mg->setPitch(activeNow ? 0.5f : 1.0f);
+                mg->setPitch(activeNow ? 1.2f : 1.0f);
             }
             confuseWasActive_ = activeNow;
         }
@@ -589,6 +625,7 @@ void PlayState::update(float dt)
             case AppleKind::Confuse:
                 effects_.applyInvert(cfg_.apple.confuseDuration);
                 confuseVisT_ = cfg_.apple.confuseDuration;
+                showPoisonBanner();
                 break;
             default:
                 break;
@@ -673,6 +710,14 @@ void PlayState::update(float dt)
         if (turboBannerT_ < 0.f) turboBannerT_ = 0.f;
         turboBannerElapsed_ += dt; // rgb
     }
+
+    // poison banner timers
+    if (poisonBannerT_ > 0.f)
+    {
+        poisonBannerT_ -= dt;
+        if (poisonBannerT_ < 0.f) poisonBannerT_ = 0.f;
+        poisonBannerElapsed_ += dt; // rgb
+    }
     scoreRGBElapsed_ += dt;
     updatePortals(dt);
 
@@ -690,6 +735,17 @@ bool PlayState::isCellFree(int x, int y) const
     size_t idx; bool isA; if (isPortalCell({x,y}, &idx, &isA)) return false;
 
     return true;
+}
+
+void PlayState::ensureWorldRT_()
+{
+    const unsigned W = static_cast<unsigned>(cfg_.gridWidth * cfg_.cellPx);
+    const unsigned H = static_cast<unsigned>(cfg_.gridHeight * cfg_.cellPx);
+    if (!worldRTReady_ || worldRT_.getSize().x != W || worldRT_.getSize().y != H) 
+    {
+        worldRTReady_ = worldRT_.create(W, H);
+        worldRT_.setSmooth(true);
+    }
 }
 
 void PlayState::spawnBreakerPU()
@@ -782,6 +838,22 @@ void PlayState::showTurboBanner()
 
     turboBannerT_ = 1.6f;
     turboBannerElapsed_ = 0.f;
+}
+
+void PlayState::showPoisonBanner()
+{
+    poisonBanner_.setFont(res_.font());
+    poisonBanner_.setString("YOU GOT THE POISON");
+    poisonBanner_.setCharacterSize(72);
+    poisonBanner_.setOutlineThickness(4.f);
+    poisonBanner_.setFillColor(sf::Color::White);
+    poisonBanner_.setOutlineColor(sf::Color::Black);
+
+    const auto b = poisonBanner_.getLocalBounds();
+    poisonBanner_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+
+    poisonBannerT_ = 1.6f;
+    poisonBannerElapsed_ = 0.f;
 }
 
 int PlayState::portalIndexAt(int gx, int gy) const
@@ -908,13 +980,25 @@ void PlayState::draw(sf::RenderTarget& rt)
     shaken.move(offX, offY);
     rt.setView(shaken);
 
+    // chromatic aberration
+    const bool kChromAb = (confuseVisT_ > 0.f) && chromAbReady_;
+    sf::RenderTarget* world = &rt;
+
+    if (kChromAb) 
+    {
+        ensureWorldRT_();
+        worldRT_.clear(sf::Color::Black);
+        worldRT_.setView(shaken);
+        world = &worldRT_;
+    }
+
     // ground
     if (groundVA_.getVertexCount() > 0) 
     {
         sf::RenderStates rs;
         rs.texture = &res_.txGround();
         if (groundDesatReady_) rs.shader = &groundDesat_;
-        rt.draw(groundVA_, rs);
+        world->draw(groundVA_, rs);
     }
 
     // prepare sprite scale for grid
@@ -942,18 +1026,18 @@ void PlayState::draw(sf::RenderTarget& rt)
             {
                 sprWall_.setRotation(0.f);
                 sprWall_.setPosition(pos);
-                rt.draw(sprWall_);
+                world->draw(sprWall_);
             }
             else if (level_.grid().isObstacle(x, y)) 
             {
                 sprObs_.setRotation(0.f);
                 sprObs_.setPosition(pos);
-                rt.draw(sprObs_);
+                world->draw(sprObs_);
             }
         }
     }
 
-    drawPortals(rt);
+    drawPortals(*world);
 
     // apples vars
     if (apple_) 
@@ -970,7 +1054,7 @@ void PlayState::draw(sf::RenderTarget& rt)
         }
         s->setRotation(0.f);
         s->setPosition(pos);
-        rt.draw(*s);
+        world->draw(*s);
     }
 
     // powerups
@@ -984,7 +1068,7 @@ void PlayState::draw(sf::RenderTarget& rt)
         {
             s->setRotation(0.f);
             s->setPosition(pos);
-            rt.draw(*s);
+            world->draw(*s);
         }
     }
 
@@ -1007,7 +1091,7 @@ void PlayState::draw(sf::RenderTarget& rt)
             }
             sprHead_.setRotation(rot);
             sprHead_.setPosition(cellCenter(h.x, h.y));
-            rt.draw(sprHead_);
+            world->draw(sprHead_);
         }
         // body
         for (size_t i = 1; i + 1 < body.size(); ++i) 
@@ -1028,7 +1112,7 @@ void PlayState::draw(sf::RenderTarget& rt)
             {
                 sprBody_.setRotation(straightV ? 90.f : 0.f);
                 sprBody_.setPosition(pos);
-                rt.draw(sprBody_);
+                world->draw(sprBody_);
             }
             else 
             {
@@ -1045,7 +1129,7 @@ void PlayState::draw(sf::RenderTarget& rt)
             auto& s = sprBodyCorner_[idx];
             s.setRotation(0.f);
             s.setPosition(pos);
-            rt.draw(s);
+            world->draw(s);
             }
         }
         // tail
@@ -1067,7 +1151,7 @@ void PlayState::draw(sf::RenderTarget& rt)
             sprTail_.setRotation(rot);
             sprTail_.setScale(cur);
             sprTail_.setPosition(cellCenter(t.x, t.y));
-            rt.draw(sprTail_);
+            world->draw(sprTail_);
             sprTail_.setScale(base);
         }
     }
@@ -1091,7 +1175,7 @@ void PlayState::draw(sf::RenderTarget& rt)
             s.setScale(sc, sc);
             s.setColor(sf::Color(255, 255, 255, A));
 
-            rt.draw(s, rs);
+            world->draw(s, rs);
         }
     }
 
@@ -1103,7 +1187,23 @@ void PlayState::draw(sf::RenderTarget& rt)
         auto col = gateViz_.getFillColor();
         col.a = (sf::Uint8)std::clamp<int>(int(a), 0, 255);
         gateViz_.setFillColor(col);
-        rt.draw(gateViz_);
+        world->draw(gateViz_);
+    }
+
+    // chromatic aberration
+    if (kChromAb) 
+    {
+        worldRT_.display();
+
+        sf::Sprite full(worldRT_.getTexture());
+        chromAb_.setUniform("u_res", sf::Glsl::Vec2((float)W, (float)H));
+        chromAb_.setUniform("u_time", confuseHueT_);
+        chromAb_.setUniform("u_amount", 30.0f);
+
+        sf::RenderStates rsChrom;
+        rsChrom.shader = &chromAb_;
+        rt.setView(worldView);
+        rt.draw(full, rsChrom);
     }
 
     auto prev = rt.getView();
@@ -1263,6 +1363,35 @@ void PlayState::draw(sf::RenderTarget& rt)
         const sf::Vector2f c = rt.getDefaultView().getCenter();
         turboBanner_.setPosition(std::floor(c.x), std::floor(c.y - 60.f));
         rt.draw(turboBanner_);
+    }
+
+    // poison banner (YOU GOT THE POISON)
+    if (poisonBannerT_ > 0.f)
+    {
+        const float dur = 1.6f;
+        const float t = 1.0f - std::max(0.0f, std::min(poisonBannerT_ / dur, 1.0f));
+        
+        const float phase = poisonBannerElapsed_ * 2.5f * 6.2831853f;
+        auto ch = [&](float p)->sf::Uint8
+            {
+            float s = 0.5f + 0.5f * std::sin(phase + p);
+            return static_cast<sf::Uint8>(std::round(255.f * s));
+            };
+        const sf::Uint8 R = ch(0.0f);
+        const sf::Uint8 G = ch(2.0943951f);
+        const sf::Uint8 B = ch(4.1887902f);
+
+        const float fade = std::sin(3.1415926f * t);
+        const sf::Uint8 A = static_cast<sf::Uint8>(std::round(255.f * fade));
+
+        sf::Color fill(R, G, B, A);
+        sf::Color out = poisonBanner_.getOutlineColor(); out.a = A;
+        poisonBanner_.setFillColor(fill);
+        poisonBanner_.setOutlineColor(out);
+
+        const sf::Vector2f c = rt.getDefaultView().getCenter();
+        poisonBanner_.setPosition(std::floor(c.x), std::floor(c.y - 20.f));
+        rt.draw(poisonBanner_);
     }
 
     if (confuseVisT_ > 0.f)

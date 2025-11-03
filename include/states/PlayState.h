@@ -13,6 +13,7 @@
 #include "systems/Effects.h"
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/Graphics/Shader.hpp>
+#include <SFML/Graphics/RenderTexture.hpp>
 #include <memory>
 #include <random>
 #include <functional>
@@ -181,6 +182,12 @@ private:
     float turboBannerElapsed_ = 0.f;
     void showTurboBanner();
 
+    // poison/confuse banner
+    sf::Text poisonBanner_;
+    float poisonBannerT_ = 0.f;
+    float poisonBannerElapsed_ = 0.f;
+    void showPoisonBanner();
+
     int portalIndexAt(int gx, int gy) const;
     std::vector<float> portalAnim_;
     float portalFrameTime_ = 0.06f;
@@ -200,6 +207,17 @@ private:
     bool confuseOverlayReady_ = false;
     float confusePulseSpeed_ = 14.0f;
     bool confuseWasActive_ = false;
+
+    // chromatic aberration
+    sf::RenderTexture worldRT_;
+    bool worldRTReady_ = false;
+    sf::Shader  chromAb_;
+    bool chromAbReady_ = false;
+    float chromAbAmountPx_ = 3.0f;
+
+    // ca helpers
+    void ensureWorldRT_();
+    void drawWorldLayer_(sf::RenderTarget& rt);
 };
 
 struct PlayContext 
