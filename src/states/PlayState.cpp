@@ -127,6 +127,44 @@ void PlayState::onEnter()
         }
     }
 
+    // --- portal emissive glow shader init ---
+    {
+        const char* frag = R"(
+        uniform sampler2D texture;
+        uniform vec3  u_tint;
+        uniform float u_strength;
+        uniform float u_time;
+        uniform vec2  u_texel;   // 1/width, 1/height текстуры
+
+        void main() 
+        {
+            vec2 uv = gl_TexCoord[0].xy;
+            vec4 t  = texture2D(texture, uv);
+            float a = t.a;
+
+            float core = smoothstep(0.0, 0.7, a);
+
+            vec2 o = u_texel * 1.5;
+            float n = 0.0;
+            n += texture2D(texture, uv + vec2( o.x, 0.0)).a;
+            n += texture2D(texture, uv + vec2(-o.x, 0.0)).a;
+            n += texture2D(texture, uv + vec2(0.0,  o.y)).a;
+            n += texture2D(texture, uv + vec2(0.0, -o.y)).a;
+            float edge = n * 0.25;
+
+            float pulse = 0.65 + 0.35 * sin(u_time);
+
+            float g = (core * 0.85 + edge * 0.65) * pulse * u_strength;
+
+            vec3 glow = u_tint * g;
+            gl_FragColor = vec4(glow, g);
+        })";
+        portalGlowReady_ = portalGlow_.loadFromMemory(frag, sf::Shader::Fragment);
+        if (portalGlowReady_) {
+            portalGlow_.setUniform("texture", sf::Shader::CurrentTexture);
+        }
+    }
+
     spawnPortals(1);
     spawnApple();
     showStageBanner();
@@ -257,7 +295,6 @@ void PlayState::spawnPortals(int pairs)
         portals_.push_back(p);
     }
     portalAnim_.assign(portals_.size(), 0.f);
-    portalLockCell_ = Vec2i(-9999, -9999);
 }
 
 bool PlayState::isPortalCell(const Vec2i& c, size_t* outPairIdx, bool* isA) const
@@ -425,19 +462,20 @@ void PlayState::update(float dt)
 
         // portals
         {
-            const Vec2i head = snake_.head();
-
-            const bool notLocked = (head.x != portalLockCell_.x) || (head.y != portalLockCell_.y);
-            if (notLocked) 
+            if (portalCooldown_ <= 0.f) 
             {
-                size_t pairIdx = 0; bool isA = false;
+                size_t pairIdx = 0;
+                bool isA = false;
+                const Vec2i head = snake_.head();
+
                 if (isPortalCell(head, &pairIdx, &isA)) 
                 {
                     const Vec2i dst = isA ? portals_[pairIdx].b : portals_[pairIdx].a;
 
                     auto snakeOccupies = [&](int x, int y) 
                         {
-                        for (const auto& c : snake_.body()) if (c.x == x && c.y == y) return true;
+                        for (const auto& c : snake_.body())
+                            if (c.x == x && c.y == y) return true;
                         return false;
                         };
 
@@ -446,16 +484,11 @@ void PlayState::update(float dt)
                         die();
                         return;
                     }
+
                     snake_.teleportHead(dst);
                     res_.playSfx(sfxPortal_, 100.f);
-                    portalLockCell_ = dst;
+                    portalCooldown_ = 0.15f;
                 }
-            }
-            else 
-            {
-                const Vec2i h = snake_.head();
-                if (h.x != portalLockCell_.x || h.y != portalLockCell_.y)
-                    portalLockCell_ = Vec2i(-9999, -9999);
             }
         }
 
@@ -742,8 +775,8 @@ void PlayState::drawPortals(sf::RenderTarget& rt)
 
     for (size_t i = 0; i < portals_.size(); ++i)
     {
-        const float t = portalAnim_[i];
-        const int frame = static_cast<int>(t / portalFrameTime_) % 8;
+        const float tAnim = portalAnim_[i];
+        const int frame = static_cast<int>(tAnim / portalFrameTime_) % 8;
 
         const sf::Texture& tex = res_.txPortal(frame);
         sf::Sprite s(tex);
@@ -757,6 +790,32 @@ void PlayState::drawPortals(sf::RenderTarget& rt)
         {
             s.setPosition(cellCenter(c.x, c.y));
             rt.draw(s);
+
+            if (portalGlowReady_) 
+            {
+                const auto col = portals_[i].color;
+                portalGlow_.setUniform("u_tint", sf::Glsl::Vec3(
+                    col.r / 255.f, col.g / 165.f, col.b / 0.f));
+
+                const float phase = tAnim * portalGlowPulseHz_ * 6.2831853f;
+                portalGlow_.setUniform("u_time", phase);
+                portalGlow_.setUniform("u_strength", portalGlowStrength_);
+
+                portalGlow_.setUniform("u_texel",
+                    sf::Glsl::Vec2(1.f / static_cast<float>(ts.x),
+                        1.f / static_cast<float>(ts.y)));
+
+                sf::Sprite g = s;
+                g.setScale(s.getScale().x * portalHaloScale_,
+                    s.getScale().y * portalHaloScale_);
+
+                sf::RenderStates rs;
+                rs.texture = &tex;
+                rs.shader = &portalGlow_;
+                rs.blendMode = sf::BlendAdd;
+
+                rt.draw(g, rs);
+            }
         }
     }
 }

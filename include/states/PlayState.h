@@ -92,7 +92,6 @@ private:
     void ephApplyHidden();
 
     std::vector<PortalPair> portals_;
-    Vec2i portalLockCell_{ -9999, -9999 }; // cell-lock
 
     void spawnPortals(int pairs = 1);
     bool isPortalCell(const Vec2i& c, size_t* outPairIdx = nullptr, bool* isA = nullptr) const;
@@ -187,6 +186,13 @@ private:
     float portalCooldown_ = 0.0f;
     void updatePortals(float dt);
     void drawPortals(sf::RenderTarget& rt);
+
+    // Emissive glow
+    sf::Shader portalGlow_;
+    bool portalGlowReady_ = false;
+    float portalGlowStrength_ = 0.75f;
+    float portalHaloScale_ = 1.30f;
+    float portalGlowPulseHz_ = 1.6f;
 };
 
 struct PlayContext 
