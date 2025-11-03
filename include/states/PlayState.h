@@ -11,6 +11,12 @@
 #include "ui/HUD.h"
 #include "vfx/CameraShake.h"
 #include "systems/Effects.h"
+#include "render/GridBatch.h"
+#include "render/ItemsRenderer.h"
+#include "render/DebugOverlay.h"
+#include "render/BackgroundRenderer.h"
+#include "render/GateRenderer.h"
+#include "render/RendererRegistry.h"
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/Graphics/Shader.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
@@ -65,18 +71,18 @@ private:
     float                   startDelay_{ 0.f };
     float                   portalPulseT_ = 0.f;
 
+    bool showPerf_ = false;
+    render::RendererRegistry rr_;
+
+    render::GridBatch gridBatch_;
+    // metrics ms draw()
+    float tBgMs_ = 0.f, tGridMs_ = 0.f, tPortalsMs_ = 0.f, tSnakeMs_ = 0.f, tUIMs_ = 0.f;
+
     // --- world render passes ---
-    void drawWorld_(sf::RenderTarget& world, const sf::View& worldView);
-    void drawWorldBackground_(sf::RenderTarget& world);
-    void drawWorldGrid_(sf::RenderTarget& world);
-    void drawApplesAndPowerups_(sf::RenderTarget& world);
-    void drawSnake_(sf::RenderTarget& world);
     void drawExplosions_(sf::RenderTarget& world);
-    void drawGate_(sf::RenderTarget& world);
 
     // --- screen-space overlays ---
     void drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldView);
-    void drawUI_(sf::RenderTarget& rt);
 
     // rgb colorout
     float confuseVisT_ = 0.f;
@@ -199,7 +205,6 @@ private:
     float portalFrameTime_ = 0.06f;
     float portalCooldown_ = 0.0f;
     void updatePortals(float dt);
-    void drawPortals(sf::RenderTarget& rt);
 
     // Emissive glow
     sf::Shader portalGlow_;

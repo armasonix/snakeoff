@@ -19,7 +19,7 @@ if (NOT SOURCES)
   message(FATAL_ERROR "not found any .cpp in ${PROJ_ROOT}/src. Check project structure.")
 endif()
 
-add_executable(SnakeOff ${SOURCES} "include/systems/HighScores.h" "src/systems/HighScores.cpp" "include/states/HighScoresState.h" "src/states/HighScoresState.cpp" "include/world/ProcGen.h" "src/world/ProcGen.cpp" "src/states/PauseState.cpp" "include/states/DifficultyState.h" "src/states/DifficultyState.cpp" "include/states/SettingsState.h" "src/states/SettingsState.cpp" "src/world/Grid.cpp" "include/states/VictoryState.h" "src/states/VictoryState.cpp" "include/states/PlayContext.h")
+add_executable(SnakeOff ${SOURCES} "include/systems/HighScores.h" "src/systems/HighScores.cpp" "include/states/HighScoresState.h" "src/states/HighScoresState.cpp" "include/world/ProcGen.h" "src/world/ProcGen.cpp" "src/states/PauseState.cpp" "include/states/DifficultyState.h" "src/states/DifficultyState.cpp" "include/states/SettingsState.h" "src/states/SettingsState.cpp" "src/world/Grid.cpp" "include/states/VictoryState.h" "src/states/VictoryState.cpp" "include/states/PlayContext.h" "include/render/GridRenderer.h" "src/render/GridRenderer.cpp" "include/render/SnakeRenderer.h" "src/render/SnakeRenderer.cpp" "include/render/PortalsRenderer.h" "src/render/PortalsRenderer.cpp" "include/render/UIRenderer.h" "src/render/UIRenderer.cpp" "include/render/GridBatch.h" "src/render/GridBatch.cpp" "include/core/Perf.h" "include/render/ItemsRenderer.h" "src/render/ItemsRenderer.cpp" "include/render/DebugOverlay.h" "src/render/DebugOverlay.cpp" "include/render/BackgroundRenderer.h" "include/render/GateRenderer.h" "include/render/RendererRegistry.h")
 
 set(ALL_INC_DIRS
     ${PROJ_ROOT}/include
