@@ -49,6 +49,14 @@ PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resou
         const auto sz = tex->getSize();
         sprExpl_.setOrigin(sz.x * 0.5f, sz.y * 0.5f);
     }
+
+    if (auto* mg = res_.music()) mg->setPitch(1.0f);
+    confuseWasActive_ = false;
+}
+
+PlayState::~PlayState()
+{
+    if (auto* mg = res_.music()) mg->setPitch(1.0f);
 }
 
 void PlayState::onEnter() 
@@ -107,6 +115,7 @@ void PlayState::onEnter()
 
     buildGroundTilemap();
 
+    // SHADERS block
     // ground desat shader init
     {
         const char* frag = R"(
@@ -125,6 +134,23 @@ void PlayState::onEnter()
             groundDesat_.setUniform("u_saturation", groundSaturation_);
             groundDesat_.setUniform("texture", sf::Shader::CurrentTexture);
         }
+    }
+
+    // confuse overlay shader
+    {
+        const char* frag = R"(
+        uniform float u_time;
+        uniform vec2  u_res;
+        void main() 
+        {
+            vec2 uv = gl_FragCoord.xy / u_res;
+            float r = 0.5 + 0.5 * sin(u_time + uv.x * 6.2831853);
+            float g = 0.5 + 0.5 * sin(u_time + 2.0943951 + uv.y * 6.2831853);
+            float b = 0.5 + 0.5 * sin(u_time + 4.1887902 + (uv.x + uv.y) * 3.1415926);
+
+            gl_FragColor = vec4(r, g, b, 0.18);
+        })";
+        confuseOverlayReady_ = confuseOverlay_.loadFromMemory(frag, sf::Shader::Fragment);
     }
 
     // --- portal emissive glow shader init ---
@@ -394,6 +420,20 @@ void PlayState::update(float dt)
         {
             apple_.reset();
             spawnApple();
+        }
+    }
+
+    // confuse music downtempo
+    {
+        const bool activeNow = (confuseVisT_ > 0.0001f);
+
+        if (activeNow != confuseWasActive_) 
+        {
+            if (auto* mg = res_.music())
+            {
+                mg->setPitch(activeNow ? 0.5f : 1.0f);
+            }
+            confuseWasActive_ = activeNow;
         }
     }
 
@@ -1076,6 +1116,24 @@ void PlayState::draw(sf::RenderTarget& rt)
     }
     rt.setView(prev);
 
+    // confuse overlay
+    if (confuseVisT_ > 0.f && confuseOverlayReady_) 
+    {
+        const int Wpx = cfg_.gridWidth * cfg_.cellPx;
+        const int Hpx = cfg_.gridHeight * cfg_.cellPx;
+
+        sf::RectangleShape cover({ (float)Wpx, (float)Hpx });
+        cover.setPosition(0.f, 0.f);
+
+        confuseOverlay_.setUniform("u_time", confuseHueT_* confusePulseSpeed_);
+        confuseOverlay_.setUniform("u_res", sf::Glsl::Vec2((float)Wpx, (float)Hpx));
+
+        sf::RenderStates rs;
+        rs.shader = &confuseOverlay_;
+        rs.blendMode = sf::BlendAdd;
+        rt.draw(cover, rs);
+    }
+
     // UI: STAGE and HUD
     {
         auto prevUI = rt.getView();
@@ -1209,22 +1267,6 @@ void PlayState::draw(sf::RenderTarget& rt)
 
     if (confuseVisT_ > 0.f)
     {
-        {
-            // color speed
-            const float hueBase = std::fmod(confuseHueT_ * 180.f, 360.f);
-            int idx = 0;
-            for (const auto& cell : snake_.body())
-            {
-                const float h = std::fmod(hueBase + idx * 12.f, 360.f);
-                const sf::Color col = hsv(h, 0.85f, 1.0f, 150); // opacity
-                sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
-                r.setPosition((float)cell.x * CELL + 1.f, (float)cell.y * CELL + 1.f);
-                r.setFillColor(col);
-                rt.draw(r);
-                ++idx;
-            }
-        }
-
         if (apple_)
         {
             const auto c = apple_->cell();
@@ -1355,7 +1397,9 @@ void PlayState::spawnApple()
 
 void PlayState::die()
 {
-    sfxDeath_.play();
+    if (auto* mg = res_.music()) mg->setPitch(1.0f);
+    confuseWasActive_ = false;
+    res_.playSfx(sfxDeath_, 100.f);
     sm_.push(std::make_unique<GameOverState>(sm_, win_, cfg_, res_, score_.value()));
     res_.switchToGameOver();
 }

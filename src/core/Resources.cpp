@@ -94,6 +94,11 @@ void Resources::resumeMusic()
         music_.play();
 }
 
+sf::Music* Resources::music() 
+{
+    return musicOn_ ? &music_ : &music_;
+}
+
 bool Resources::load(const std::string& assetsDir)
 {
     font_ = std::make_unique<sf::Font>();
@@ -187,6 +192,18 @@ bool Resources::load(const std::string& assetsDir)
         std::cerr << "[RES] Resource loading FAILED (SFX/FONT). "
         "Will still try to load textures…\n";
     }
+
+    musicGame_ = std::make_unique<sf::Music>();
+    const std::string gameMusicPath = "assets/music/theme.ogg";
+    if (!musicGame_->openFromFile(gameMusicPath)) 
+    {
+        musicGame_.reset();
+    }
+    else {
+        musicGame_->setLoop(true);
+        musicGame_->setVolume(100.f);
+    }
+
     auto loadTex = [&](std::unique_ptr<sf::Texture>& t, const std::string& path)
     {
         t.reset(new sf::Texture());
@@ -242,15 +259,17 @@ bool Resources::load(const std::string& assetsDir)
         for (size_t i = 0; i < 8; ++i)
             loadTexRaw(txPortal_[i], names[i]);
     }
-
+    soundOn_ = true;
     return ok;
 }
 
 void Resources::stopMusic() { music_.stop(); }
 
-void Resources::playSfx(sf::Sound& s, float volume) 
+void Resources::playSfx(sf::Sound& s, float volume)
 {
-    if (!soundOn_) return; // mute
+    if (!soundOn_) return;
+    s.stop();
     s.setVolume(volume);
+    s.setRelativeToListener(true);
     s.play();
 }

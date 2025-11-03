@@ -29,6 +29,7 @@ class PlayState : public IGameState
 {
 public:
     PlayState(class StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res);
+    ~PlayState();
 
     void onEnter() override;
     void handleEvent(const sf::Event& e) override;
@@ -193,6 +194,12 @@ private:
     float portalGlowStrength_ = 0.75f;
     float portalHaloScale_ = 1.30f;
     float portalGlowPulseHz_ = 1.6f;
+
+    // confuse overlay
+    sf::Shader confuseOverlay_;
+    bool confuseOverlayReady_ = false;
+    float confusePulseSpeed_ = 14.0f;
+    bool confuseWasActive_ = false;
 };
 
 struct PlayContext 

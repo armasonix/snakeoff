@@ -22,6 +22,9 @@ public:
     const sf::SoundBuffer& sfxPortal() const { return *portal_; }
     const sf::SoundBuffer& sfxUiMove() const { return *sfxUiMoveBuf_; }
     const sf::SoundBuffer& sfxUiHit()  const { return *sfxUiHitBuf_; }
+    
+    sf::Music* musicGame() const { return musicGame_.get(); }
+    sf::Music* music();
 
     void setSoundEnabled(bool on);
     void setMusicEnabled(bool on);
@@ -72,6 +75,8 @@ private:
     sf::Music music_;
     MusicTrack currentTrack_ = MusicTrack::None;
     std::string currentPath_;
+
+    std::unique_ptr<sf::Music> musicGame_;
 
     bool openAndPlay_(const std::string& path, bool loop, float vol, MusicTrack t);
 
