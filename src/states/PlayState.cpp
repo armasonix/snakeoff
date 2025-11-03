@@ -42,6 +42,12 @@ PlayState::PlayState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resou
     sprBodyCorner_[1].setTexture(res_.txBodyC2());
     sprBodyCorner_[2].setTexture(res_.txBodyC3());
     sprBodyCorner_[3].setTexture(res_.txBodyC4());
+    
+    if (auto tex = sprExpl_.getTexture()) 
+    {
+        const auto sz = tex->getSize();
+        sprExpl_.setOrigin(sz.x * 0.5f, sz.y * 0.5f);
+    }
 }
 
 void PlayState::onEnter() 
@@ -386,11 +392,11 @@ void PlayState::update(float dt)
 
         Vec2i next = snake_.head();
         switch (snake_.direction()) 
-{
-        case Direction::Up:    --next.y; break;
-        case Direction::Down:  ++next.y; break;
-        case Direction::Left:  --next.x; break;
-        case Direction::Right: ++next.x; break;
+        {
+            case Direction::Up:    --next.y; break;
+            case Direction::Down:  ++next.y; break;
+            case Direction::Left:  --next.x; break;
+            case Direction::Right: ++next.x; break;
         }
 
         // portals
@@ -453,6 +459,7 @@ void PlayState::update(float dt)
                 level_.grid().destroyObstacle(h.x, h.y);
                 res_.playSfx(sfxBreak_, 100.f);
                 explFx_.push_back({ cellCenter(h.x, h.y), 0.25f });
+                shake_.start(0.12f, 2.0f);
             }
         }
 
@@ -836,17 +843,26 @@ void PlayState::draw(sf::RenderTarget& rt)
     }
 
     // explosion vfx
-    for (const auto& fx : explFx_) 
     {
-        const float kLife = 0.25f;
-        const float t = std::max(0.f, std::min(fx.t, kLife)) / kLife; // 0..1
-        sf::Color c = sf::Color::White; c.a = (sf::Uint8)std::round(255.f * t);
-        sprExpl_.setColor(c);
-        sprExpl_.setPosition(fx.pos);
-        const auto& tx = *sprExpl_.getTexture();
-        sprExpl_.setScale((cfg_.cellPx / (float)tx.getSize().x) * (1.f + 0.2f * (1.f - t)),
-        (cfg_.cellPx / (float)tx.getSize().y) * (1.f + 0.2f * (1.f - t)));
-        rt.draw(sprExpl_);
+        constexpr float kLife = 0.25f;
+
+        sf::RenderStates rs;
+        rs.texture = sprExpl_.getTexture();
+        rs.blendMode = sf::BlendAdd;
+
+        for (const auto& fx : explFx_)
+        {
+            const float tNorm = 1.0f - std::clamp(fx.t / kLife, 0.0f, 1.0f);
+            const float sc = 0.90f + 1.10f * tNorm;
+            const sf::Uint8 A = static_cast<sf::Uint8>(255.0f * std::sqrt(std::max(0.0f, 1.0f - tNorm)));
+
+            sf::Sprite s = sprExpl_;
+            s.setPosition(fx.pos);
+            s.setScale(sc, sc);
+            s.setColor(sf::Color(255, 255, 255, A));
+
+            rt.draw(s, rs);
+        }
     }
 
     if (gateUnlocked_) 
