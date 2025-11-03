@@ -5,6 +5,7 @@
 #include <SFML/Audio.hpp> 
 #include <memory>
 #include <string>
+#include <array>
 
 enum class MusicTrack { None, Menu, Session, GameOver };
 
@@ -60,6 +61,8 @@ public:
     const sf::Texture & txBodyC3() const { return *txBodyC3_; }
     const sf::Texture & txBodyC4() const { return *txBodyC4_; }
 
+    const sf::Texture& txPortal(size_t i) const { return txPortal_[i % 8]; }
+
 private:
     std::unique_ptr<sf::Font> font_;
     std::unique_ptr<sf::SoundBuffer> eat_, death_, sfxUiMoveBuf_, sfxUiHitBuf_, win_, bonus_, break_, portal_;
@@ -89,4 +92,6 @@ private:
     std::unique_ptr<sf::Texture> txBodyC2_;
     std::unique_ptr<sf::Texture> txBodyC3_;
     std::unique_ptr<sf::Texture> txBodyC4_;
+
+    std::array<sf::Texture, 8> txPortal_;
 };

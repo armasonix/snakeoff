@@ -12,6 +12,7 @@
 #include "vfx/CameraShake.h"
 #include "systems/Effects.h"
 #include <SFML/Graphics/VertexArray.hpp>
+#include <SFML/Graphics/Shader.hpp>
 #include <memory>
 #include <random>
 #include <functional>
@@ -106,6 +107,9 @@ private:
     float brUiMaxSec_{ 3.0f };
     float brUiUpdateThrottle_{ 0.0f };
 
+    sf::Text scoreRGB_;
+    float scoreRGBElapsed_ = 0.f;
+
     // Level progression
     int   levelIndex_{ 1 };
     int   scoreAtLevelStart_{ 0 }; // init mark to enter on level
@@ -143,6 +147,10 @@ private:
     sf::VertexArray groundVA_;
     void buildGroundTilemap();
 
+    sf::Shader groundDesat_;
+    bool groundDesatReady_ = false;
+    float groundSaturation_ = 0.55f;
+
     // texture helpers
     inline sf::Vector2f cellCenter(int cx, int cy) const 
     {
@@ -160,6 +168,25 @@ private:
     // vfx explosion
     struct ExplFx { sf::Vector2f pos; float t; };
     std::vector<ExplFx> explFx_;
+
+    // wallbreaker banner
+    sf::Text breakerBanner_;
+    float breakerBannerT_ = 0.f;
+    float breakerBannerElapsed_ = 0.f;
+    void showBreakerBanner();
+
+    // turbosnake banner
+    sf::Text turboBanner_;
+    float turboBannerT_ = 0.f;
+    float turboBannerElapsed_ = 0.f;
+    void showTurboBanner();
+
+    int portalIndexAt(int gx, int gy) const;
+    std::vector<float> portalAnim_;
+    float portalFrameTime_ = 0.06f;
+    float portalCooldown_ = 0.0f;
+    void updatePortals(float dt);
+    void drawPortals(sf::RenderTarget& rt);
 };
 
 struct PlayContext 

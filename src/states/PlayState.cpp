@@ -10,6 +10,7 @@
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <algorithm>
+#include <string>
 #include <cstdio> 
 #include <cmath>
 
@@ -106,6 +107,26 @@ void PlayState::onEnter()
 
     buildGroundTilemap();
 
+    // ground desat shader init
+    {
+        const char* frag = R"(
+        uniform sampler2D texture;
+        uniform float u_saturation;
+        void main()
+        {
+            vec4 c = texture2D(texture, gl_TexCoord[0].xy);
+            float gray = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+            vec3 desat = mix(vec3(gray), c.rgb, u_saturation);
+            gl_FragColor = vec4(desat, c.a);
+        })";
+        groundDesatReady_ = groundDesat_.loadFromMemory(frag, sf::Shader::Fragment);
+        if (groundDesatReady_) 
+        {
+            groundDesat_.setUniform("u_saturation", groundSaturation_);
+            groundDesat_.setUniform("texture", sf::Shader::CurrentTexture);
+        }
+    }
+
     spawnPortals(1);
     spawnApple();
     showStageBanner();
@@ -114,6 +135,12 @@ void PlayState::onEnter()
     scoreAtLevelStart_ = score_.value();
     gateUnlocked_ = false;
     gateCell_ = Vec2i(-1, -1);
+
+    scoreRGB_.setFont(res_.font());
+    scoreRGB_.setCharacterSize(28);
+    scoreRGB_.setOutlineThickness(2.f);
+    scoreRGB_.setFillColor(sf::Color::White);
+    scoreRGB_.setOutlineColor(sf::Color::Black);
 }
 
 bool PlayState::isBorderNonCorner(int x, int y) const
@@ -209,11 +236,11 @@ void PlayState::startLevel(int idx)
 void PlayState::spawnPortals(int pairs)
 {
     portals_.clear();
-    static thread_local std::mt19937 rng{ std::random_device{}() };
+    portalCooldown_ = 0.f;
 
+    static thread_local std::mt19937 rng{ std::random_device{}() };
     for (int i = 0; i < pairs; ++i)
     {
-        // Spawner::randomFreeCell(const Grid&, const Snake&)
         Vec2i a = Spawner::randomFreeCell(level_.grid(), snake_);
         Vec2i b = Spawner::randomFreeCell(level_.grid(), snake_);
         int guard = 0;
@@ -224,15 +251,12 @@ void PlayState::spawnPortals(int pairs)
             b = Spawner::randomFreeCell(level_.grid(), snake_);
         }
 
-        PortalPair p;
-        p.a = a;
-        p.b = b;
-
-        static const sf::Color colors[] = { {120,200,255}, {255,160,80}, {180,255,120}, {220,120,255} };
+        PortalPair p; p.a = a; p.b = b;
+        static const sf::Color colors[] = { {120,200,255},{255,160,80},{180,255,120},{220,120,255} };
         p.color = colors[i % (int)std::size(colors)];
-
         portals_.push_back(p);
     }
+    portalAnim_.assign(portals_.size(), 0.f);
     portalLockCell_ = Vec2i(-9999, -9999);
 }
 
@@ -487,6 +511,7 @@ void PlayState::update(float dt)
             }
             case AppleKind::Poison:
                 effects_.applySpeed(cfg_.apple.poisonSpeedMul, cfg_.apple.poisonDuration);
+                showTurboBanner();
                 break;
             case AppleKind::Confuse:
                 effects_.applyInvert(cfg_.apple.confuseDuration);
@@ -513,6 +538,7 @@ void PlayState::update(float dt)
                     res_.playSfx(sfxBonus_, 100.f);
                 }
                 powerups_.erase(powerups_.begin() + i);
+                showBreakerBanner();
                 break;
             }
         }
@@ -558,6 +584,25 @@ void PlayState::update(float dt)
         if (it->t <= 0.f) it = explFx_.erase(it);
         else ++it;
     }
+
+    // wallbreaker banner timers
+    if (breakerBannerT_ > 0.f) 
+    {
+        breakerBannerT_ -= dt;
+        if (breakerBannerT_ < 0.f) breakerBannerT_ = 0.f;
+        breakerBannerElapsed_ += dt; // rgb
+    }
+
+    // turbosnake banner timers
+    if (turboBannerT_ > 0.f) 
+    {
+        turboBannerT_ -= dt;
+        if (turboBannerT_ < 0.f) turboBannerT_ = 0.f;
+        turboBannerElapsed_ += dt; // rgb
+    }
+    scoreRGBElapsed_ += dt;
+    updatePortals(dt);
+
 }
 
 bool PlayState::isCellFree(int x, int y) const
@@ -633,6 +678,89 @@ void PlayState::buildGroundTilemap()
     }
 }
 
+// wallbreaker banner
+void PlayState::showBreakerBanner()
+{
+    breakerBanner_.setFont(res_.font());
+    breakerBanner_.setString("WALLBREAKER");
+    breakerBanner_.setCharacterSize(72);
+    breakerBanner_.setOutlineThickness(4.f);
+    breakerBanner_.setFillColor(sf::Color::White);
+    breakerBanner_.setOutlineColor(sf::Color::Black);
+
+    const auto b = breakerBanner_.getLocalBounds();
+    breakerBanner_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+
+    breakerBannerT_ = 1.6f;
+    breakerBannerElapsed_ = 0.f;
+}
+
+void PlayState::showTurboBanner()
+{
+    turboBanner_.setFont(res_.font());
+    turboBanner_.setString("TURBOSNAKE");
+    turboBanner_.setCharacterSize(72);
+    turboBanner_.setOutlineThickness(4.f);
+    turboBanner_.setFillColor(sf::Color::White);
+    turboBanner_.setOutlineColor(sf::Color::Black);
+
+    const auto b = turboBanner_.getLocalBounds();
+    turboBanner_.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+
+    turboBannerT_ = 1.6f;
+    turboBannerElapsed_ = 0.f;
+}
+
+int PlayState::portalIndexAt(int gx, int gy) const
+{
+    for (size_t i = 0; i < portals_.size(); ++i)
+    {
+        const auto& p = portals_[i];
+        if ((p.a.x == gx && p.a.y == gy) || (p.b.x == gx && p.b.y == gy))
+            return static_cast<int>(i);
+    }
+    return -1;
+}
+
+void PlayState::updatePortals(float dt)
+{
+    for (auto& t : portalAnim_) t += dt;
+
+    if (portalCooldown_ > 0.f) 
+    {
+        portalCooldown_ -= dt;
+        if (portalCooldown_ < 0.f) portalCooldown_ = 0.f;
+    }
+}
+
+void PlayState::drawPortals(sf::RenderTarget& rt)
+{
+    if (portals_.empty()) return;
+
+    const float cellW = static_cast<float>(cfg_.cellPx);
+    const float cellH = static_cast<float>(cfg_.cellPx);
+
+    for (size_t i = 0; i < portals_.size(); ++i)
+    {
+        const float t = portalAnim_[i];
+        const int frame = static_cast<int>(t / portalFrameTime_) % 8;
+
+        const sf::Texture& tex = res_.txPortal(frame);
+        sf::Sprite s(tex);
+
+        const auto ts = tex.getSize();
+        s.setOrigin(ts.x * 0.5f, ts.y * 0.5f);
+        s.setScale(cellW / ts.x, cellH / ts.y);
+
+        const Vec2i pts[2] = { portals_[i].a, portals_[i].b };
+        for (const Vec2i& c : pts)
+        {
+            s.setPosition(cellCenter(c.x, c.y));
+            rt.draw(s);
+        }
+    }
+}
+
 // EPH
 void PlayState::ephApplyVisible()
 {
@@ -686,6 +814,7 @@ void PlayState::draw(sf::RenderTarget& rt)
     {
         sf::RenderStates rs;
         rs.texture = &res_.txGround();
+        if (groundDesatReady_) rs.shader = &groundDesat_;
         rt.draw(groundVA_, rs);
     }
 
@@ -724,6 +853,8 @@ void PlayState::draw(sf::RenderTarget& rt)
             }
         }
     }
+
+    drawPortals(rt);
 
     // apples vars
     if (apple_) 
@@ -876,49 +1007,6 @@ void PlayState::draw(sf::RenderTarget& rt)
         rt.draw(gateViz_);
     }
 
-    const float t = portalPulseT_;
-    const float freq = 1.5f;
-    const float pulseScale = 1.0f + 0.12f * std::sin(2.f * 3.1415926f * freq * t);
-    const sf::Uint8 baseA = 150;
-    const sf::Uint8 pulseA = (sf::Uint8)(80 * (0.5f + 0.5f * std::sin(2.f * 3.1415926f * freq * t)));
-
-    auto drawCellFilled = [&](const Vec2i& c, sf::Color col) 
-    {
-        sf::RectangleShape r({ (float)CELL - 2.f, (float)CELL - 2.f });
-        r.setPosition((float)c.x * CELL + 1.f, (float)c.y * CELL + 1.f);
-        r.setFillColor(col);
-        rt.draw(r);
-    };
-
-    auto drawPulsingCircle = [&](const Vec2i& c, sf::Color col, bool darker) 
-    {
-        const float cx = (float)c.x * CELL + CELL * 0.5f;
-        const float cy = (float)c.y * CELL + CELL * 0.5f;
-        const float radius = (CELL - 6) * 0.5f;
-
-        if (darker) { col.r = (sf::Uint8)(col.r * 0.5f); col.g = (sf::Uint8)(col.g * 0.5f); col.b = (sf::Uint8)(col.b * 0.5f); }
-        col.a = (sf::Uint8)std::min<int>(255, baseA + pulseA);
-
-        sf::CircleShape circ(radius);
-        circ.setOrigin(radius, radius);
-        circ.setPosition(cx, cy);
-        circ.setScale(pulseScale, pulseScale);
-        circ.setFillColor(col);
-        rt.draw(circ);
-    };
-
-    for (const auto& p : portals_) 
-    {
-        // enter brighter
-        drawCellFilled(p.a, sf::Color(p.color.r, p.color.g, p.color.b, 180));
-        drawPulsingCircle(p.a, p.color, /*darker=*/false);
-
-        // exit darker
-        sf::Color outCol(p.color.r / 2, p.color.g / 2, p.color.b / 2);
-        drawCellFilled(p.b, sf::Color(outCol.r, outCol.g, outCol.b, 160));
-        drawPulsingCircle(p.b, outCol, /*darker=*/true);
-    }
-
     auto prev = rt.getView();
     rt.setView(rt.getDefaultView());
     if (snake_.breakerTimeLeft() > 0.f) 
@@ -954,7 +1042,33 @@ void PlayState::draw(sf::RenderTarget& rt)
         }
 
         // HUD
-        hud_.draw(rt, score_);
+        {
+            scoreRGB_.setString("Score: " + std::to_string(score_.value()));
+
+            const float phase = scoreRGBElapsed_ * 2.5f * 6.2831853f;
+            auto ch = [&](float p)->sf::Uint8
+                {
+                float s = 0.5f + 0.5f * std::sin(phase + p);
+                return static_cast<sf::Uint8>(std::round(255.f * s));
+                };
+            const sf::Uint8 R = ch(0.0f);
+            const sf::Uint8 G = ch(2.0943951f);
+            const sf::Uint8 B = ch(4.1887902f);
+            scoreRGB_.setFillColor(sf::Color(R, G, B, 255));
+            scoreRGB_.setOutlineColor(sf::Color(0, 0, 0, 220));
+
+            const auto b = scoreRGB_.getLocalBounds();
+            scoreRGB_.setOrigin(b.left + b.width, b.top);
+
+            const sf::View& dv = rt.getDefaultView();
+            const float right = std::floor(dv.getCenter().x + dv.getSize().x * 0.5f);
+            const float top = std::floor(dv.getCenter().y - dv.getSize().y * 0.5f);
+
+            const float pad = 12.f;
+            scoreRGB_.setPosition(right - pad, top + pad);
+
+            rt.draw(scoreRGB_);
+        }
 
         sf::Text info("", res_.font(), 16);
         info.setPosition(12.f, 48.f);
@@ -973,6 +1087,65 @@ void PlayState::draw(sf::RenderTarget& rt)
         rt.draw(info);
 
         rt.setView(prevUI);
+    }
+
+    // wallbreaker banner
+    if (breakerBannerT_ > 0.f)
+    {
+        const float dur = 1.6f;
+        const float t = 1.0f - std::max(0.0f, std::min(breakerBannerT_ / dur, 1.0f));
+
+        // rgb
+        const float phase = breakerBannerElapsed_ * 2.5f * 6.2831853f;
+        auto ch = [&](float p) -> sf::Uint8 
+            {
+            float s = 0.5f + 0.5f * std::sin(phase + p);
+            return static_cast<sf::Uint8>(std::round(255.f * s));
+            };
+        const sf::Uint8 R = ch(0.0f);
+        const sf::Uint8 G = ch(2.0943951f);
+        const sf::Uint8 B = ch(4.1887902f);
+
+        const float fade = std::sin(3.1415926f * t);
+        const sf::Uint8 A = static_cast<sf::Uint8>(std::round(255.f * fade));
+
+        sf::Color fill(R, G, B, A);
+        sf::Color out = breakerBanner_.getOutlineColor(); out.a = A;
+        breakerBanner_.setFillColor(fill);
+        breakerBanner_.setOutlineColor(out);
+
+        const sf::Vector2f c = rt.getDefaultView().getCenter();
+        breakerBanner_.setPosition(std::floor(c.x), std::floor(c.y - 100.f));
+        rt.draw(breakerBanner_);
+    }
+
+    // turbosnake banner
+    if (turboBannerT_ > 0.f)
+    {
+        const float dur = 1.6f;
+        const float t = 1.0f - std::max(0.0f, std::min(turboBannerT_ / dur, 1.0f));
+
+        const float phase = turboBannerElapsed_ * 2.5f * 6.2831853f;
+        auto ch = [&](float p)->sf::Uint8 
+            {
+            float s = 0.5f + 0.5f * std::sin(phase + p);
+            return static_cast<sf::Uint8>(std::round(255.f * s));
+            };
+        const sf::Uint8 R = ch(0.0f);
+        const sf::Uint8 G = ch(2.0943951f);
+        const sf::Uint8 B = ch(4.1887902f);
+
+        const float fade = std::sin(3.1415926f * t);
+        const sf::Uint8 A = static_cast<sf::Uint8>(std::round(255.f * fade));
+
+        sf::Color fill(R, G, B, A);
+        sf::Color out = turboBanner_.getOutlineColor(); out.a = A;
+        turboBanner_.setFillColor(fill);
+        turboBanner_.setOutlineColor(out);
+
+        const sf::Vector2f c = rt.getDefaultView().getCenter();
+        turboBanner_.setPosition(std::floor(c.x), std::floor(c.y - 60.f));
+        rt.draw(turboBanner_);
     }
 
     if (confuseVisT_ > 0.f)
@@ -1057,8 +1230,6 @@ void PlayState::draw(sf::RenderTarget& rt)
         // returns base cam — HUD draws by coords
         const auto prevHUD = rt.getView();
         rt.setView(rt.getDefaultView());
-
-        hud_.draw(rt, score_);
 
         {
             sf::Text info("", res_.font(), 16);

@@ -118,6 +118,8 @@ bool Resources::load(const std::string& assetsDir)
 
     bool ok = true;
 
+    const std::string G = assetsDir + "/tex/";
+
     ok &= ensureExists(fontPath, "font");
     ok &= ensureExists(eatPath, "sound");
     ok &= ensureExists(losePath, "sound");
@@ -185,7 +187,7 @@ bool Resources::load(const std::string& assetsDir)
         std::cerr << "[RES] Resource loading FAILED (SFX/FONT). "
         "Will still try to load textures…\n";
     }
-    auto loadTex = [&](std::unique_ptr<sf::Texture>& t, const std::string& path) 
+    auto loadTex = [&](std::unique_ptr<sf::Texture>& t, const std::string& path)
     {
         t.reset(new sf::Texture());
         t->setSmooth(true);
@@ -196,7 +198,17 @@ bool Resources::load(const std::string& assetsDir)
         }
     };
 
-    const std::string G = "assets/tex/";
+    auto loadTexRaw = [&](sf::Texture& t, const std::string& name)
+    {
+        const std::string path = G + name;
+        t.setSmooth(true);
+        if (!t.loadFromFile(path))
+        {
+            std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
+            ok = false;
+        }
+    };
+
     loadTex(txSnakeHead_, G + "sHead.png");
     loadTex(txSnakeBody_, G + "sBody.png");
     loadTex(txSnakeTail_, G + "sTail.png");
@@ -219,6 +231,16 @@ bool Resources::load(const std::string& assetsDir)
     {
         txGround_->setSmooth(false);
         txGround_->setRepeated(true);
+    }
+
+    {
+        const char* names[8] = 
+        {
+            "prtl1.png","prtl2.png","prtl3.png","prtl4.png",
+            "prtl5.png","prtl6.png","prtl7.png","prtl8.png"
+        };
+        for (size_t i = 0; i < 8; ++i)
+            loadTexRaw(txPortal_[i], names[i]);
     }
 
     return ok;
