@@ -4,6 +4,7 @@
 #include "world/Portal.h"
 class Config;
 class Resources;
+namespace gfx { struct GlowParams; }
 
 namespace render
 {
@@ -17,4 +18,13 @@ namespace render
         float glowStrength,
         float haloScale,
         float glowPulseHz);
+
+    void drawPortals(sf::RenderTarget& rt,
+        const Config& cfg,
+        Resources& res,
+        const std::vector<PortalPair>& portals,
+        const std::vector<float>& portalAnim,
+        sf::Shader* glow,
+        bool glowReady,
+        const gfx::GlowParams& baseGlow);
 }

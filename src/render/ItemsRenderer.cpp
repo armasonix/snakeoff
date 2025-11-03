@@ -1,6 +1,9 @@
 #include "render/ItemsRenderer.h"
+#include "render/SpriteRefs.h"
 #include "core/Config.h"
 #include "entities/Apple.h"
+#include <algorithm>
+#include <cmath>
 
 namespace
 {
@@ -41,23 +44,20 @@ namespace render
         AppleKind    kind,
         float        appleTTL,
         const std::vector<PowerUp>& powerups,
-        sf::Sprite& sprApple1,
-        sf::Sprite& sprApple2,
-        sf::Sprite& sprApple3,
-        sf::Sprite& sprPowerBomb,
-        sf::Sprite& sprPowerMush)
+        const SpriteRefs& sref)
     {
         // apple
         if (apple)
         {
             const auto c = apple->cell();
             const auto pos = cellCenter(c.x, c.y, cfg.cellPx);
-            sf::Sprite* s = &sprApple1;
+
+            sf::Sprite* s = &sref.apple1;
             switch (kind)
             {
-                case AppleKind::Bonus:   s = &sprApple2;   break;
-                case AppleKind::Poison:  s = &sprApple3;   break;
-                case AppleKind::Confuse: s = &sprPowerMush;break;
+                case AppleKind::Bonus:   s = &sref.apple2;   break;
+                case AppleKind::Poison:  s = &sref.apple3;   break;
+                case AppleKind::Confuse: s = &sref.powerMush;break;
                 default: break;
             }
             s->setRotation(0.f);
@@ -83,7 +83,7 @@ namespace render
         for (const auto& p : powerups)
         {
             const auto pos = cellCenter(p.cellX, p.cellY, cfg.cellPx);
-            sf::Sprite* s = (p.kind == PowerUpKind::Breaker) ? &sprPowerBomb : &sprPowerMush;
+            sf::Sprite* s = (p.kind == PowerUpKind::Breaker) ? &sref.powerBomb : &sref.powerMush;
             s->setRotation(0.f);
             s->setPosition(pos);
             world.draw(*s);

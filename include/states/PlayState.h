@@ -78,9 +78,6 @@ private:
     // metrics ms draw()
     float tBgMs_ = 0.f, tGridMs_ = 0.f, tPortalsMs_ = 0.f, tSnakeMs_ = 0.f, tUIMs_ = 0.f;
 
-    // --- world render passes ---
-    void drawExplosions_(sf::RenderTarget& world);
-
     // --- screen-space overlays ---
     void drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldView);
 
@@ -177,6 +174,23 @@ private:
         s.setScale(cfg_.cellPx / static_cast<float>(sz.x),
             cfg_.cellPx / static_cast<float>(sz.y));
     }
+
+    // occupancy grid 
+    std::vector<uint8_t> snakeOcc_;
+    bool snakeOccDirty_ = true;
+    inline int occIndex_(int x, int y) const { return y * cfg_.gridWidth + x; }
+    void rebuildSnakeOcc_();
+    inline bool isSnakeOcc_(int x, int y) const 
+    {
+        if (x < 0 || y < 0 || x >= cfg_.gridWidth || y >= cfg_.gridHeight) return false;
+        if (snakeOcc_.empty()) return false;
+        return snakeOcc_[occIndex_(x, y)] != 0;
+    
+    }
+
+    // Scratch buffer
+    std::vector<sf::Vector2f> expPosScratch_;
+    std::vector<float>        expTScratch_;
 
     // vfx explosion
     struct ExplFx { sf::Vector2f pos; float t; };

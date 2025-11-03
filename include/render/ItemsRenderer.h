@@ -5,6 +5,7 @@
 
 class Config;
 class Apple;
+namespace render { struct SpriteRefs; }
 
 namespace render
 {
@@ -16,9 +17,5 @@ namespace render
         AppleKind    kind,
         float        appleTTL,
         const std::vector<PowerUp>& powerups,
-        sf::Sprite& sprApple1,
-        sf::Sprite& sprApple2,
-        sf::Sprite& sprApple3,
-        sf::Sprite& sprPowerBomb,
-        sf::Sprite& sprPowerMush);
+        const SpriteRefs& sprites);
 }

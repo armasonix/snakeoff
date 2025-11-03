@@ -3,6 +3,7 @@
 #include "systems/Score.h"
 #include "entities/Snake.h"
 #include "core/Resources.h"
+#include "render/ScopedView.h"
 #include <cmath>
 #include <string>
 
@@ -10,8 +11,7 @@ namespace render
 {
     void drawUI(sf::RenderTarget& rt, UIParams u)
     {
-        auto prev = rt.getView();
-        rt.setView(rt.getDefaultView());
+        ScopedView sv(rt); // default view scope
 
         // stage overlay
         if (u.stageTimer > 0.f)
@@ -66,7 +66,6 @@ namespace render
             rt.draw(info);
         }
 
-        // breaker progress
         if (u.snake.breakerTimeLeft() > 0.f)
         {
             rt.draw(u.brBack);
@@ -74,7 +73,6 @@ namespace render
             rt.draw(u.brText);
         }
 
-        // banners
         auto drawBanner = [&](sf::Text& t, float lifeT, float elapsed, float yOff)
             {
                 if (!(lifeT > 0.f)) return;
@@ -105,7 +103,5 @@ namespace render
         drawBanner(u.breakerBanner, u.breakerBannerT, u.breakerBannerElapsed, -100.f);
         drawBanner(u.turboBanner, u.turboBannerT, u.turboBannerElapsed, -60.f);
         drawBanner(u.poisonBanner, u.poisonBannerT, u.poisonBannerElapsed, -20.f);
-
-        rt.setView(prev);
     }
 }

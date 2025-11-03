@@ -1,44 +1,106 @@
 #include "render/SnakeRenderer.h"
+#include "render/SpriteRefs.h"
 #include "entities/Snake.h"
+#include <cmath>
+#include <algorithm>
 
-namespace render
+namespace
 {
-    static inline sf::Vector2f cellCenter(int x, int y, int cellPx)
+    inline sf::Vector2f cellCenter(int x, int y, int cellPx)
     {
         const float cs = static_cast<float>(cellPx);
         return { x * cs + cs * 0.5f, y * cs + cs * 0.5f };
     }
 
-    void drawSnake(sf::RenderTarget& world,
+    struct QuadWriter
+    {
+        sf::VertexArray va{ sf::Quads };
+        const sf::Texture* tex = nullptr;
+        void begin(const sf::Texture* t) { tex = t; va.clear(); }
+        void addQuad(const sf::Vector2f& center, int cellPx,
+            bool rotate90,
+            float halfPixel = 0.5f)
+        {
+            const float w = cellPx * 0.5f, h = cellPx * 0.5f;
+            const float x0 = center.x - w, y0 = center.y - h;
+            const float x1 = center.x + w, y1 = center.y + h;
+
+            sf::Vertex q[4];
+            q[0].position = { x0, y0 };
+            q[1].position = { x1, y0 };
+            q[2].position = { x1, y1 };
+            q[3].position = { x0, y1 };
+
+            const auto ts = tex->getSize();
+            const float u0 = halfPixel, v0 = halfPixel;
+            const float u1 = ts.x - halfPixel, v1 = ts.y - halfPixel;
+
+            if (!rotate90) 
+            {
+                q[0].texCoords = { u0, v0 };
+                q[1].texCoords = { u1, v0 };
+                q[2].texCoords = { u1, v1 };
+                q[3].texCoords = { u0, v1 };
+            }
+            else 
+            {
+                q[0].texCoords = { u1, v0 };
+                q[1].texCoords = { u1, v1 };
+                q[2].texCoords = { u0, v1 };
+                q[3].texCoords = { u0, v0 };
+            }
+
+            va.append(q[0]); va.append(q[1]); va.append(q[2]); va.append(q[3]);
+        }
+        void flush(sf::RenderTarget& rt)
+        {
+            if (!tex || va.getVertexCount() == 0) return;
+            sf::RenderStates rs; rs.texture = tex;
+            rt.draw(va, rs);
+            va.clear();
+        }
+    };
+}
+
+namespace render
+{
+    void drawSnakeBatched(sf::RenderTarget& world,
         const Snake& snake,
         int cellPx,
-        sf::Sprite& sprHead,
-        sf::Sprite& sprBody,
-        sf::Sprite& sprTail,
-        const std::array<sf::Sprite*, 4>& sprBodyCorner)
+        const SpriteRefs& sref)
     {
         const auto& body = snake.body();
         if (body.empty()) return;
 
         // head
         {
-            auto h = body.front();
+            const auto h = body.front();
             float rot = 0.f;
             if (body.size() >= 2)
             {
-                auto n = *(body.begin() + 1);
+                const auto n = *(body.begin() + 1);
                 const int dx = h.x - n.x, dy = h.y - n.y;
                 if (dx == 1)       rot = 0.f;
                 else if (dx == -1) rot = 180.f;
                 else if (dy == 1)  rot = 90.f;
                 else if (dy == -1) rot = 270.f;
             }
-            sprHead.setRotation(rot);
-            sprHead.setPosition(cellCenter(h.x, h.y, cellPx));
-            world.draw(sprHead);
+            sref.head.setRotation(rot);
+            sref.head.setPosition(cellCenter(h.x, h.y, cellPx));
+            world.draw(sref.head);
         }
 
-        // body & corners
+        // body and corners
+        QuadWriter bodyH;     bodyH.begin(sref.body.getTexture());
+        QuadWriter bodyV;     bodyV.begin(sref.body.getTexture());
+        QuadWriter corner[4];
+        for (int i = 0;i < 4;++i) corner[i].begin(sref.corners[i]->getTexture());
+
+        auto addCorner = [&](int idx, const sf::Vector2f& pos) 
+            {
+            corner[idx].addQuad(pos, cellPx, false);
+            };
+
         for (size_t i = 1; i + 1 < body.size(); ++i)
         {
             const auto prev = body[i - 1];
@@ -49,14 +111,13 @@ namespace render
             const int dx2 = next.x - c.x, dy2 = next.y - c.y;
             const bool straightH = (dy1 == 0 && dy2 == 0);
             const bool straightV = (dx1 == 0 && dx2 == 0);
-            const bool corner = !(straightH || straightV);
+            const bool cornerSeg = !(straightH || straightV);
             const sf::Vector2f pos = cellCenter(c.x, c.y, cellPx);
 
-            if (!corner)
+            if (!cornerSeg)
             {
-                sprBody.setRotation(straightV ? 90.f : 0.f);
-                sprBody.setPosition(pos);
-                world.draw(sprBody);
+                if (straightH) bodyH.addQuad(pos, cellPx, false);
+                else           bodyV.addQuad(pos, cellPx, true);
             }
             else
             {
@@ -69,11 +130,7 @@ namespace render
                 else if (hasLeft && hasUp)    idx = 1;
                 else if (hasRight && hasDown) idx = 2;
                 else                          idx = 3;
-
-                auto& s = *sprBodyCorner[idx];
-                s.setRotation(0.f);
-                s.setPosition(pos);
-                world.draw(s);
+                addCorner(idx, pos);
             }
         }
 
@@ -90,15 +147,20 @@ namespace render
             else if (dy == -1) rot = 270.f;
             rot += 180.f; if (rot >= 360.f) rot -= 360.f;
 
-            const sf::Vector2f base = sprTail.getScale();
+            const sf::Vector2f base = sref.tail.getScale();
             sf::Vector2f cur = base;
             if (rot == 0.f || rot == 180.f) cur.x *= 1.15f; else cur.y *= 1.15f;
 
-            sprTail.setRotation(rot);
-            sprTail.setScale(cur);
-            sprTail.setPosition(cellCenter(t.x, t.y, cellPx));
-            world.draw(sprTail);
-            sprTail.setScale(base);
+            sref.tail.setRotation(rot);
+            sref.tail.setScale(cur);
+            sref.tail.setPosition(cellCenter(t.x, t.y, cellPx));
+            world.draw(sref.tail);
+            sref.tail.setScale(base);
         }
+
+        // flush
+        bodyH.flush(world);
+        bodyV.flush(world);
+        for (int i = 0;i < 4;++i) corner[i].flush(world);
     }
 }

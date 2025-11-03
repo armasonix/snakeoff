@@ -1,8 +1,14 @@
 #include "states/PlayState.h"
+#include "states/PauseState.h"
+#include "states/GameOverState.h"
+#include "states/VictoryState.h"
+#include "states/PlayContext.h"
+#include "entities/Powerup.h"
 #include "systems/Spawner.h"
 #include "systems/Collision.h"
 #include "render/SnakeRenderer.h"
 #include "render/PortalsRenderer.h"
+#include "render/ExplosionsRenderer.h"
 #include "render/UIRenderer.h"
 #include "render/GridBatch.h"
 #include "render/ItemsRenderer.h"
@@ -10,14 +16,15 @@
 #include "render/BackgroundRenderer.h"
 #include "render/GateRenderer.h"
 #include "render/RendererRegistry.h"
-#include "states/PauseState.h"
-#include "states/GameOverState.h"
-#include "states/VictoryState.h"
-#include "states/PlayContext.h"
-#include "entities/Powerup.h"
-#include "core/StateMachine.h"
+#include "render/SpriteRefs.h"
+#include "render/ScopedView.h"
+#include "render/SpriteScaler.h"
+#include "gfx/ShaderParams.h"
+#include "gfx/ShaderInit.h"
 #include "world/ProcGen.h"
 #include <SFML/Graphics.hpp>
+#include "core/StateMachine.h"
+#include "core/Input.h"
 #include "core/Perf.h"
 #include <functional>
 #include <algorithm>
@@ -84,6 +91,15 @@ void PlayState::onEnter()
     level_.buildBorders();
     res_.ensureSessionLoop();
 
+    render::SpriteRefs sref
+    {
+        sprHead_, sprBody_, sprTail_,
+        { &sprBodyCorner_[0], &sprBodyCorner_[1], &sprBodyCorner_[2], &sprBodyCorner_[3] },
+        sprApple1_, sprApple2_, sprApple3_, sprPowerBomb_, sprPowerMush_,
+        sprExpl_, sprWall_, sprObs_
+    };
+    render::applyCellScale(sref, cfg_.cellPx);
+
     // center or snake init spawn cell
     sf::Vector2i start{ level_.cols() / 2, level_.rows() / 2 };
 
@@ -142,117 +158,11 @@ void PlayState::onEnter()
     buildGroundTilemap();
     gridBatch_.build(level_, cfg_.cellPx, res_.txWall(), res_.txObstacle());
 
-    // SHADERS block
-    // ground desat shader init
-    {
-        const char* frag = R"(
-        uniform sampler2D texture;
-        uniform float u_saturation;
-        void main()
-        {
-            vec4 c = texture2D(texture, gl_TexCoord[0].xy);
-            float gray = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-            vec3 desat = mix(vec3(gray), c.rgb, u_saturation);
-            gl_FragColor = vec4(desat, c.a);
-        })";
-        groundDesatReady_ = groundDesat_.loadFromMemory(frag, sf::Shader::Fragment);
-        if (groundDesatReady_) 
-        {
-            groundDesat_.setUniform("u_saturation", groundSaturation_);
-            groundDesat_.setUniform("texture", sf::Shader::CurrentTexture);
-        }
-    }
-
-    // confuse overlay shader
-    {
-        const char* frag = R"(
-        uniform float u_time;
-        uniform vec2  u_res;
-        void main() 
-        {
-            vec2 uv = gl_FragCoord.xy / u_res;
-            float r = 0.5 + 0.5 * sin(u_time + uv.x * 6.2831853);
-            float g = 0.5 + 0.5 * sin(u_time + 2.0943951 + uv.y * 6.2831853);
-            float b = 0.5 + 0.5 * sin(u_time + 4.1887902 + (uv.x + uv.y) * 3.1415926);
-
-            gl_FragColor = vec4(r, g, b, 0.18);
-        })";
-        confuseOverlayReady_ = confuseOverlay_.loadFromMemory(frag, sf::Shader::Fragment);
-    }
-
-    // chromatic aberration shader
-    {
-        const char* frag = R"(
-        uniform sampler2D texture;
-        uniform vec2  u_res;
-        uniform float u_amount;
-        uniform float u_time;
-
-        void main() 
-        {
-            vec2 uv = gl_TexCoord[0].xy;
-
-            vec2 center = vec2(0.5, 0.5);
-            vec2 d = uv - center;
-            float r = length(d) + 1e-6;
-
-            float amtUV = (u_amount / u_res.x) * (0.95 + 0.15 * sin(u_time * 6.2831853));
-            vec2 dir = d / r;
-
-            vec2 off = dir * amtUV * r * 2.0;
-
-            float rr = texture2D(texture, uv + off).r;
-            float gg = texture2D(texture, uv).g;
-            float bb = texture2D(texture, uv - off).b;
-
-            vec4 src = texture2D(texture, uv);
-            gl_FragColor = vec4(rr, gg, bb, src.a);
-        })";
-        chromAbReady_ = chromAb_.loadFromMemory(frag, sf::Shader::Fragment);
-        if (chromAbReady_) 
-        {
-            chromAb_.setUniform("texture", sf::Shader::CurrentTexture);
-        }
-    }
-
-    // --- portal emissive glow shader init ---
-    {
-        const char* frag = R"(
-        uniform sampler2D texture;
-        uniform vec3  u_tint;
-        uniform float u_strength;
-        uniform float u_time;
-        uniform vec2  u_texel;   // 1/width, 1/height текстуры
-
-        void main() 
-        {
-            vec2 uv = gl_TexCoord[0].xy;
-            vec4 t  = texture2D(texture, uv);
-            float a = t.a;
-
-            float core = smoothstep(0.0, 0.7, a);
-
-            vec2 o = u_texel * 1.5;
-            float n = 0.0;
-            n += texture2D(texture, uv + vec2( o.x, 0.0)).a;
-            n += texture2D(texture, uv + vec2(-o.x, 0.0)).a;
-            n += texture2D(texture, uv + vec2(0.0,  o.y)).a;
-            n += texture2D(texture, uv + vec2(0.0, -o.y)).a;
-            float edge = n * 0.25;
-
-            float pulse = 0.65 + 0.35 * sin(u_time);
-
-            float g = (core * 0.85 + edge * 0.65) * pulse * u_strength;
-
-            vec3 glow = u_tint * g;
-            gl_FragColor = vec4(glow, g);
-        })";
-        portalGlowReady_ = portalGlow_.loadFromMemory(frag, sf::Shader::Fragment);
-        if (portalGlowReady_) 
-        {
-            portalGlow_.setUniform("texture", sf::Shader::CurrentTexture);
-        }
-    }
+    gfx::initGameShaders(
+    groundDesat_, groundDesatReady_, groundSaturation_,
+    confuseOverlay_, confuseOverlayReady_,
+    chromAb_, chromAbReady_,
+    portalGlow_, portalGlowReady_);
 
     spawnPortals(1);
     spawnApple();
@@ -403,61 +313,57 @@ void PlayState::showStageBanner()
 
 void PlayState::handleEvent(const sf::Event& e)
 {
-    // game input
-    if (e.type == sf::Event::KeyPressed)
-    {
-        auto key = e.key.code;
+    if (e.type != sf::Event::KeyPressed) return;
 
-        if (effects_.inverted()) 
-        {
-            // control inverting
-            if (key == sf::Keyboard::W)          key = sf::Keyboard::S;
-            else if (key == sf::Keyboard::S)     key = sf::Keyboard::W;
-            else if (key == sf::Keyboard::A)     key = sf::Keyboard::D;
-            else if (key == sf::Keyboard::D)     key = sf::Keyboard::A;
-            else if (key == sf::Keyboard::Up)    key = sf::Keyboard::Down;
-            else if (key == sf::Keyboard::Down)  key = sf::Keyboard::Up;
-            else if (key == sf::Keyboard::Left)  key = sf::Keyboard::Right;
-            else if (key == sf::Keyboard::Right) key = sf::Keyboard::Left;
-        }
+    static Input map; 
+    const bool inverted = effects_.inverted();
+    const auto result = mapKeyPressed(e.key.code, map, inverted);
 
-        if (key == sf::Keyboard::W || key == sf::Keyboard::Up)
-            snake_.setDirection(Direction::Up);
-        if (key == sf::Keyboard::S || key == sf::Keyboard::Down)
-            snake_.setDirection(Direction::Down);
-        if (key == sf::Keyboard::A || key == sf::Keyboard::Left)
-            snake_.setDirection(Direction::Left);
-        if (key == sf::Keyboard::D || key == sf::Keyboard::Right)
-            snake_.setDirection(Direction::Right);
-        if (key == sf::Keyboard::P) 
-        {
-            sm_.push(std::make_unique<PauseState>(sm_, res_));
-        }
-    }
-    if (e.type == sf::Event::KeyPressed)
+    for (auto a : result.actions)
     {
-        switch (e.key.code)
+        switch (a)
         {
-        case sf::Keyboard::F3:  showPerf_ = !showPerf_; break;
-        case sf::Keyboard::F4:  rr_.toggleBackground(); break;
-        case sf::Keyboard::F5:  rr_.toggleGrid();       break;
-        case sf::Keyboard::F6:  rr_.togglePortals();    break;
-        case sf::Keyboard::F7:  rr_.toggleItems();      break;
-        case sf::Keyboard::F8:  rr_.toggleSnake();      break;
-        case sf::Keyboard::F9:  rr_.toggleGate();       break;
-        case sf::Keyboard::F10: rr_.toggleConfuseFx();  break;
-        case sf::Keyboard::F11: rr_.toggleUI();         break;
-        default: break;
+            case InputAction::MoveUp:    snake_.setDirection(Direction::Up);    break;
+            case InputAction::MoveDown:  snake_.setDirection(Direction::Down);  break;
+            case InputAction::MoveLeft:  snake_.setDirection(Direction::Left);  break;
+            case InputAction::MoveRight: snake_.setDirection(Direction::Right); break;
+            case InputAction::Pause:
+            sm_.push(std::make_unique<PauseState>(sm_, res_)); break;
+
+            case InputAction::TogglePerf:        showPerf_ = !showPerf_; break;
+            case InputAction::ToggleBackground:  rr_.toggleBackground(); break;
+            case InputAction::ToggleGrid:        rr_.toggleGrid();       break;
+            case InputAction::TogglePortals:     rr_.togglePortals();    break;
+            case InputAction::ToggleItems:       rr_.toggleItems();      break;
+            case InputAction::ToggleSnake:       rr_.toggleSnake();      break;
+            case InputAction::ToggleGate:        rr_.toggleGate();       break;
+            case InputAction::ToggleConfuseFx:   rr_.toggleConfuseFx();  break;
+            case InputAction::ToggleUI:          rr_.toggleUI();         break;
         }
     }
 }
 
+void PlayState::rebuildSnakeOcc_()
+{
+    const int W = cfg_.gridWidth, H = cfg_.gridHeight;
+    if ((int)snakeOcc_.size() != W * H) snakeOcc_.assign(W* H, 0);
+    else std::fill(snakeOcc_.begin(), snakeOcc_.end(), 0);
+    for (const auto& c : snake_.body()) 
+    {
+        if (c.x >= 0 && c.y >= 0 && c.x < W && c.y < H)
+        snakeOcc_[occIndex_(c.x, c.y)] = 1;
+    }
+        snakeOccDirty_ = false;
+}
+
 void PlayState::update(float dt) 
 {
+    if (snakeOccDirty_) rebuildSnakeOcc_();
     effects_.update(dt);
     shake_.update(dt);
     snake_.update(dt);
     snake_.tickBreaker(dt);
+    snakeOccDirty_ = true;
     maybeUnlockGate();
 
     puSpawnCooldown_ -= dt;
@@ -575,14 +481,9 @@ void PlayState::update(float dt)
                 {
                     const Vec2i dst = isA ? portals_[pairIdx].b : portals_[pairIdx].a;
 
-                    auto snakeOccupies = [&](int x, int y) 
-                        {
-                        for (const auto& c : snake_.body())
-                            if (c.x == x && c.y == y) return true;
-                        return false;
-                        };
+                    
 
-                    if (level_.isBlocked(dst.x, dst.y) || snakeOccupies(dst.x, dst.y)) 
+                    if (level_.isBlocked(dst.x, dst.y) || isSnakeOcc_(dst.x, dst.y))
                     {
                         die();
                         return;
@@ -933,11 +834,28 @@ void PlayState::draw(sf::RenderTarget& rt)
 
     if (kChromAb)
     {
-        ensureWorldRT_();
-        worldRT_.clear(sf::Color::Black);
-        worldRT_.setView(shaken);
-        world = &worldRT_;
+        worldRT_.display();
+        sf::Sprite full(worldRT_.getTexture());
+
+        gfx::ChromAbParams cap;
+        cap.res = sf::Glsl::Vec2(static_cast<float>(W), static_cast<float>(H));
+        cap.time = confuseHueT_;
+        cap.amount = chromAbAmountPx_;
+
+        sf::RenderStates rsChrom; rsChrom.shader = &chromAb_;
+        cap.apply(chromAb_);
+
+        render::ScopedView sv(rt, worldView);
+        rt.draw(full, rsChrom);
     }
+
+    render::SpriteRefs sref
+    {
+        sprHead_, sprBody_, sprTail_,
+        { &sprBodyCorner_[0], &sprBodyCorner_[1], &sprBodyCorner_[2], &sprBodyCorner_[3] },
+        sprApple1_, sprApple2_, sprApple3_, sprPowerBomb_, sprPowerMush_,
+        sprExpl_, sprWall_, sprObs_
+    };
 
     // world pass
     world->setView(shaken);
@@ -959,24 +877,33 @@ void PlayState::draw(sf::RenderTarget& rt)
     if (rr_.portals)
     {
         perf::ScopeTimer _(tPortalsMs_);
+        gfx::GlowParams gp;
+        gp.strength = portalGlowStrength_;
+        gp.haloScale = portalHaloScale_;
         render::drawPortals(*world, cfg_, res_, portals_, portalAnim_,
-            &portalGlow_, portalGlowReady_, portalGlowStrength_,
-            portalHaloScale_, portalGlowPulseHz_);
+            &portalGlow_, portalGlowReady_, gp);
     }
 
     if (rr_.items)
     {
         render::drawItems(*world, cfg_, apple_.get(),
             static_cast<render::AppleKind>(static_cast<int>(appleKind_)),
-            appleTTL_, powerups_,
-            sprApple1_, sprApple2_, sprApple3_, sprPowerBomb_, sprPowerMush_);
+            appleTTL_, powerups_, sref);
     }
 
     if (rr_.snake)
     {
         perf::ScopeTimer _(tSnakeMs_);
-        std::array<sf::Sprite*, 4> corners = { &sprBodyCorner_[0], &sprBodyCorner_[1], &sprBodyCorner_[2], &sprBodyCorner_[3] };
-        render::drawSnake(*world, snake_, cfg_.cellPx, sprHead_, sprBody_, sprTail_, corners);
+        render::drawSnakeBatched(*world, snake_, cfg_.cellPx, sref);
+    }
+
+    if (!explFx_.empty())
+    {
+        expPosScratch_.clear(); expTScratch_.clear();
+        expPosScratch_.reserve(explFx_.size());
+        expTScratch_.reserve(explFx_.size());
+        for (const auto& fx : explFx_) { expPosScratch_.push_back(fx.pos); expTScratch_.push_back(fx.t); }
+        render::drawExplosions(*world, sprExpl_, expPosScratch_, expTScratch_, 0.25f);
     }
 
     if (rr_.gate)
@@ -989,12 +916,6 @@ void PlayState::draw(sf::RenderTarget& rt)
     {
         worldRT_.display();
         sf::Sprite full(worldRT_.getTexture());
-        chromAb_.setUniform("u_res", sf::Glsl::Vec2(static_cast<float>(W), static_cast<float>(H)));
-        chromAb_.setUniform("u_time", confuseHueT_);
-        chromAb_.setUniform("u_amount", chromAbAmountPx_);
-        sf::RenderStates rsChrom; rsChrom.shader = &chromAb_;
-        rt.setView(worldView);
-        rt.draw(full, rsChrom);
     }
 
     // confuse world-space overlay
@@ -1036,28 +957,6 @@ void PlayState::draw(sf::RenderTarget& rt)
     }
 }
 
-// helpers: explosion
-void PlayState::drawExplosions_(sf::RenderTarget& world)
-{
-    constexpr float kLife = 0.25f;
-    sf::RenderStates rs;
-    rs.texture = sprExpl_.getTexture();
-    rs.blendMode = sf::BlendAdd;
-
-    for (const auto& fx : explFx_)
-    {
-        const float tNorm = 1.0f - std::clamp(fx.t / kLife, 0.0f, 1.0f);
-        const float sc = 0.90f + 1.10f * tNorm;
-        const sf::Uint8 A = static_cast<sf::Uint8>(255.0f * std::sqrt(std::max(0.0f, 1.0f - tNorm)));
-
-        sf::Sprite s = sprExpl_;
-        s.setPosition(fx.pos);
-        s.setScale(sc, sc);
-        s.setColor(sf::Color(255, 255, 255, A));
-        world.draw(s, rs);
-    }
-}
-
 // helpers: confuse overlay
 void PlayState::drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldView)
 {
@@ -1068,17 +967,17 @@ void PlayState::drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldV
     sf::RectangleShape cover({ (float)Wpx, (float)Hpx });
     cover.setPosition(0.f, 0.f);
 
-    confuseOverlay_.setUniform("u_time", confuseHueT_ * confusePulseSpeed_);
-    confuseOverlay_.setUniform("u_res", sf::Glsl::Vec2((float)Wpx, (float)Hpx));
+    gfx::ConfuseParams cp;
+    cp.res = sf::Glsl::Vec2((float)Wpx, (float)Hpx);
+    cp.time = confuseHueT_ * confusePulseSpeed_;
+    cp.apply(confuseOverlay_);
 
     sf::RenderStates rs;
     rs.shader = &confuseOverlay_;
     rs.blendMode = sf::BlendAdd;
 
-    auto prev = rt.getView();
-    rt.setView(worldView);
+    render::ScopedView sv(rt, worldView);
     rt.draw(cover, rs);
-    rt.setView(prev);
 }
 
 void PlayState::spawnApple()

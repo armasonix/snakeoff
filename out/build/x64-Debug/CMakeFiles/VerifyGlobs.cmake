@@ -15,6 +15,7 @@ set(OLD_GLOB
   "E:/SnakeOff/SnakeOff/src/entities/apples/NormalApple.cpp"
   "E:/SnakeOff/SnakeOff/src/main.cpp"
   "E:/SnakeOff/SnakeOff/src/render/DebugOverlay.cpp"
+  "E:/SnakeOff/SnakeOff/src/render/ExplosionsRenderer.cpp"
   "E:/SnakeOff/SnakeOff/src/render/GridBatch.cpp"
   "E:/SnakeOff/SnakeOff/src/render/GridRenderer.cpp"
   "E:/SnakeOff/SnakeOff/src/render/ItemsRenderer.cpp"
