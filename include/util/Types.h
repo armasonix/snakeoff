@@ -2,18 +2,19 @@
 #include <cstdint>
 #include <vector>
 #include <deque>
+#include <functional>
 
 struct Vec2i { int x{ 0 }, y{ 0 }; };
 inline bool operator==(const Vec2i& a, const Vec2i& b) { return a.x == b.x && a.y == b.y; }
+inline bool operator!=(const Vec2i & a, const Vec2i & b) { return !(a == b); }
 inline Vec2i operator+(const Vec2i& a, const Vec2i& b) { return { a.x + b.x, a.y + b.y }; }
+inline Vec2i operator-(const Vec2i & a, const Vec2i & b) { return { a.x - b.x, a.y - b.y }; }
 
-enum class Direction { Up, Down, Left, Right };
-
-enum class Difficulty : int { D1 = 1, D2, D3, D4, D5 };
-
-struct DifficultyParams 
+struct Vec2iHash
 {
-    float stepSec;      // velocity: range between snake step updates
-    int pointsPerApple; // P
-    int growthPerApple; // L
+	std::size_t operator()(const Vec2i & v) const noexcept
+	{
+		return (static_cast<std::size_t>(static_cast<uint32_t>(v.x)) << 32)
+		^ static_cast<std::size_t>(static_cast<uint32_t>(v.y));
+	}
 };

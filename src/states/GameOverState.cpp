@@ -3,27 +3,8 @@
 #include "states/MenuState.h"
 #include "core/StateMachine.h"
 #include <SFML/Graphics.hpp>
+#include "gfx/Color.h"
 #include <cmath>
-
-//HSV to RGB helper
-static sf::Color hsv(float h, float s, float v)
-{
-    h = std::fmod(h, 360.f); if (h < 0) h += 360.f;
-    const float c = v * s;
-    const float x = c * (1.f - std::fabs(std::fmod(h / 60.f, 2.f) - 1.f));
-    const float m = v - c;
-    float r = 0, g = 0, b = 0;
-    if (h < 60) { r = c; g = x; b = 0; }
-        else if (h < 120) { r = x; g = c; b = 0; }
-        else if (h < 180) { r = 0; g = c; b = x; }
-        else if (h < 240) { r = 0; g = x; b = c; }
-        else if (h < 300) { r = x; g = 0; b = c; }
-        else { r = c; g = 0; b = x; }
-    return sf::Color(
-        (sf::Uint8)std::round((r + m) * 255.f),
-        (sf::Uint8)std::round((g + m) * 255.f),
-        (sf::Uint8)std::round((b + m) * 255.f));
-}
 
 void GameOverState::onEnter() 
 {
@@ -43,8 +24,10 @@ void GameOverState::handleEvent(const sf::Event& e)
         {
             if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S
             || e.key.code == sf::Keyboard::Up || e.key.code == sf::Keyboard::Down)
+            {
                 askSel_ = 1 - askSel_;
                 sfxMove_.play();
+            }
             if (e.key.code == sf::Keyboard::Enter) 
             {
                 if (askSel_ == 1) phase_ = Phase::EnterName; // yes - enter name
@@ -94,8 +77,10 @@ void GameOverState::handleEvent(const sf::Event& e)
     {
         if (e.key.code == sf::Keyboard::W || e.key.code == sf::Keyboard::S
         || e.key.code == sf::Keyboard::Up || e.key.code == sf::Keyboard::Down)
+        {
             optSel_ = 1 - optSel_;
             sfxMove_.play();
+        }
         if (e.key.code == sf::Keyboard::Enter) 
         {
             if (optSel_ == 0) sm_.push(std::make_unique<PlayState>(sm_, win_, cfg_, res_));
@@ -125,7 +110,7 @@ void GameOverState::draw(sf::RenderTarget& rt)
     
     float h = std::fmod(titleHue_, 120.f);
     if (h > 60.f) h = 120.f - h;
-    title.setFillColor(hsv(h, 1.f, 1.f));
+    title.setFillColor(gfx::hsv(h, 1.f, 1.f));
 
     {
         const auto b = title.getLocalBounds();

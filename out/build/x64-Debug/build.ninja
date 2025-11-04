@@ -50,7 +50,8 @@ cmake_ninja_workdir = E$:\SnakeOff\SnakeOff\out\build\x64-Debug\
 build cmake_object_order_depends_target_SnakeOff: phony || .
 
 build CMakeFiles\SnakeOff.dir\src\audio\SoundBus.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\audio\SoundBus.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\audio
@@ -58,7 +59,8 @@ build CMakeFiles\SnakeOff.dir\src\audio\SoundBus.cpp.obj: CXX_COMPILER__SnakeOff
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\core\Application.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\core\Application.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\core
@@ -66,7 +68,8 @@ build CMakeFiles\SnakeOff.dir\src\core\Application.cpp.obj: CXX_COMPILER__SnakeO
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\core\Config.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\core\Config.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\core
@@ -74,7 +77,8 @@ build CMakeFiles\SnakeOff.dir\src\core\Config.cpp.obj: CXX_COMPILER__SnakeOff_un
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\core\Resources.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\core\Resources.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\core
@@ -82,7 +86,8 @@ build CMakeFiles\SnakeOff.dir\src\core\Resources.cpp.obj: CXX_COMPILER__SnakeOff
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\core\StateMachine.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\core\StateMachine.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\core
@@ -90,7 +95,8 @@ build CMakeFiles\SnakeOff.dir\src\core\StateMachine.cpp.obj: CXX_COMPILER__Snake
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\entities\Apple.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\entities\Apple.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\entities
@@ -98,7 +104,8 @@ build CMakeFiles\SnakeOff.dir\src\entities\Apple.cpp.obj: CXX_COMPILER__SnakeOff
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\entities\Powerup.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\entities\Powerup.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\entities
@@ -106,7 +113,8 @@ build CMakeFiles\SnakeOff.dir\src\entities\Powerup.cpp.obj: CXX_COMPILER__SnakeO
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\entities\Snake.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\entities\Snake.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\entities
@@ -114,7 +122,8 @@ build CMakeFiles\SnakeOff.dir\src\entities\Snake.cpp.obj: CXX_COMPILER__SnakeOff
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\entities\apples\NormalApple.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\entities\apples\NormalApple.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\entities\apples
@@ -122,7 +131,8 @@ build CMakeFiles\SnakeOff.dir\src\entities\apples\NormalApple.cpp.obj: CXX_COMPI
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\gfx\Composite.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\gfx\Composite.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\gfx
@@ -130,7 +140,8 @@ build CMakeFiles\SnakeOff.dir\src\gfx\Composite.cpp.obj: CXX_COMPILER__SnakeOff_
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\main.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\main.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src
@@ -138,7 +149,8 @@ build CMakeFiles\SnakeOff.dir\src\main.cpp.obj: CXX_COMPILER__SnakeOff_unscanned
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\DebugOverlay.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\DebugOverlay.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -146,7 +158,8 @@ build CMakeFiles\SnakeOff.dir\src\render\DebugOverlay.cpp.obj: CXX_COMPILER__Sna
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\ExplosionsRenderer.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\ExplosionsRenderer.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -154,7 +167,8 @@ build CMakeFiles\SnakeOff.dir\src\render\ExplosionsRenderer.cpp.obj: CXX_COMPILE
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\GridBatch.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\GridBatch.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -162,7 +176,8 @@ build CMakeFiles\SnakeOff.dir\src\render\GridBatch.cpp.obj: CXX_COMPILER__SnakeO
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\GridRenderer.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\GridRenderer.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -170,7 +185,8 @@ build CMakeFiles\SnakeOff.dir\src\render\GridRenderer.cpp.obj: CXX_COMPILER__Sna
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\ItemsRenderer.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\ItemsRenderer.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -178,7 +194,8 @@ build CMakeFiles\SnakeOff.dir\src\render\ItemsRenderer.cpp.obj: CXX_COMPILER__Sn
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\PortalsRenderer.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\PortalsRenderer.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -186,7 +203,8 @@ build CMakeFiles\SnakeOff.dir\src\render\PortalsRenderer.cpp.obj: CXX_COMPILER__
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\SnakeRenderer.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\SnakeRenderer.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -194,7 +212,8 @@ build CMakeFiles\SnakeOff.dir\src\render\SnakeRenderer.cpp.obj: CXX_COMPILER__Sn
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\render\UIRenderer.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\render\UIRenderer.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\render
@@ -202,7 +221,8 @@ build CMakeFiles\SnakeOff.dir\src\render\UIRenderer.cpp.obj: CXX_COMPILER__Snake
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\DifficultyState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\DifficultyState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -210,7 +230,8 @@ build CMakeFiles\SnakeOff.dir\src\states\DifficultyState.cpp.obj: CXX_COMPILER__
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\GameOverState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\GameOverState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -218,7 +239,8 @@ build CMakeFiles\SnakeOff.dir\src\states\GameOverState.cpp.obj: CXX_COMPILER__Sn
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\HighScoresState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\HighScoresState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -226,7 +248,8 @@ build CMakeFiles\SnakeOff.dir\src\states\HighScoresState.cpp.obj: CXX_COMPILER__
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\MenuState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\MenuState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -234,7 +257,8 @@ build CMakeFiles\SnakeOff.dir\src\states\MenuState.cpp.obj: CXX_COMPILER__SnakeO
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\PauseState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\PauseState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -242,7 +266,8 @@ build CMakeFiles\SnakeOff.dir\src\states\PauseState.cpp.obj: CXX_COMPILER__Snake
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\PlayState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\PlayState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -250,7 +275,8 @@ build CMakeFiles\SnakeOff.dir\src\states\PlayState.cpp.obj: CXX_COMPILER__SnakeO
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\SettingsState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\SettingsState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -258,7 +284,8 @@ build CMakeFiles\SnakeOff.dir\src\states\SettingsState.cpp.obj: CXX_COMPILER__Sn
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\states\VictoryState.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\states\VictoryState.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\states
@@ -266,7 +293,8 @@ build CMakeFiles\SnakeOff.dir\src\states\VictoryState.cpp.obj: CXX_COMPILER__Sna
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\systems\HighScores.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\systems\HighScores.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\systems
@@ -274,7 +302,8 @@ build CMakeFiles\SnakeOff.dir\src\systems\HighScores.cpp.obj: CXX_COMPILER__Snak
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\systems\Spawner.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\systems\Spawner.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\systems
@@ -282,7 +311,8 @@ build CMakeFiles\SnakeOff.dir\src\systems\Spawner.cpp.obj: CXX_COMPILER__SnakeOf
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\ui\HUD.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\ui\HUD.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\ui
@@ -290,7 +320,8 @@ build CMakeFiles\SnakeOff.dir\src\ui\HUD.cpp.obj: CXX_COMPILER__SnakeOff_unscann
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\util\Random.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\util\Random.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\util
@@ -298,7 +329,8 @@ build CMakeFiles\SnakeOff.dir\src\util\Random.cpp.obj: CXX_COMPILER__SnakeOff_un
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\vfx\CameraShake.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\vfx\CameraShake.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\vfx
@@ -306,7 +338,8 @@ build CMakeFiles\SnakeOff.dir\src\vfx\CameraShake.cpp.obj: CXX_COMPILER__SnakeOf
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\world\Grid.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\world\Grid.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\world
@@ -314,7 +347,8 @@ build CMakeFiles\SnakeOff.dir\src\world\Grid.cpp.obj: CXX_COMPILER__SnakeOff_uns
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\world\Level.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\world\Level.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\world
@@ -322,7 +356,8 @@ build CMakeFiles\SnakeOff.dir\src\world\Level.cpp.obj: CXX_COMPILER__SnakeOff_un
   TARGET_PDB = SnakeOff.pdb
 
 build CMakeFiles\SnakeOff.dir\src\world\ProcGen.cpp.obj: CXX_COMPILER__SnakeOff_unscanned_Debug E$:\SnakeOff\SnakeOff\src\world\ProcGen.cpp || cmake_object_order_depends_target_SnakeOff
-  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor
+  DEFINES = -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /W4 /permissive- /Zc:preprocessor /EHsc /external:W0 /external:anglebrackets
   INCLUDES = -IE:\SnakeOff\SnakeOff\include -external:IE:\SnakeOff\SnakeOff\lib\SFML\include -external:W0
   OBJECT_DIR = CMakeFiles\SnakeOff.dir
   OBJECT_FILE_DIR = CMakeFiles\SnakeOff.dir\src\world

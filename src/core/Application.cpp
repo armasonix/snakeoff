@@ -3,36 +3,42 @@
 #include "states/MenuState.h"
 
 Application::Application(int wPx, int hPx)
-    : win_(sf::VideoMode(wPx, hPx), "SnakeOff", sf::Style::Close) 
+    : win_(sf::VideoMode(wPx, hPx), "SnakeOff", sf::Style::Close)
 {
     win_.setVerticalSyncEnabled(true);
 }
 
-bool Application::init() 
+bool Application::init()
 {
+    cfg_.loadUserSettings("data/settings.cfg");
+
+    res_.setSoundEnabled(cfg_.soundOn);
+    res_.setMusicEnabled(cfg_.musicOn);
+
     const int W = cfg_.gridWidth * cfg_.cellPx;
     const int H = cfg_.gridHeight * cfg_.cellPx;
-    const float s = cfg_.windowScale; // default scale
+    const float s = cfg_.windowScale;
     win_.setSize({ (unsigned)(W * s), (unsigned)(H * s) });
     sf::View worldView(sf::FloatRect(0, 0, (float)W, (float)H));
     win_.setView(worldView);
 
-    cfg_.loadUserSettings("data/settings.cfg");
-    res_.setSoundEnabled(cfg_.soundOn);
-    res_.setMusicEnabled(cfg_.musicOn);
+    win_.setVerticalSyncEnabled(cfg_.vsync);
+    if (!cfg_.vsync && cfg_.frameLimit > 0) win_.setFramerateLimit(cfg_.frameLimit);
+    else win_.setFramerateLimit(0); 
+    win_.setKeyRepeatEnabled(false);
 
     return res_.load("assets");
 }
 
-void Application::run() 
+void Application::run()
 {
     sm_.push(std::make_unique<MenuState>(sm_, win_, cfg_, res_));
 
     sf::Clock clock;
-    while (win_.isOpen()) 
+    while (win_.isOpen())
     {
         sf::Event e;
-        while (win_.pollEvent(e)) 
+        while (win_.pollEvent(e))
         {
             if (e.type == sf::Event::Closed) win_.close();
             if (auto* gs = dynamic_cast<IGameState*>(sm_.top()))

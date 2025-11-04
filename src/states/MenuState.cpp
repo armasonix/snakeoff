@@ -3,30 +3,11 @@
 #include "core/StateMachine.h"
 #include "core/Resources.h" 
 #include <SFML/Graphics.hpp>
+#include "gfx/Color.h"
 #include "states/SettingsState.h"
 #include "states/DifficultyState.h"
 #include "states/HighScoresState.h"
 #include <cmath>
-
-// HSV to RGB helper
-static sf::Color hsv(float h, float s, float v)
-{
-    h = std::fmod(h, 360.f); if (h < 0) h += 360.f;
-    float c = v * s;
-    float x = c * (1 - std::fabs(std::fmod(h / 60.f, 2.f) - 1));
-    float m = v - c;
-    float r = 0, g = 0, b = 0;
-    if (h < 60) { r = c; g = x; b = 0; }
-        else if (h < 120) { r = x; g = c; b = 0; }
-        else if (h < 180) { r = 0; g = c; b = x; }
-        else if (h < 240) { r = 0; g = x; b = c; }
-        else if (h < 300) { r = x; g = 0; b = c; }
-        else { r = c; g = 0; b = x; }
-    return sf::Color(
-    (sf::Uint8)std::round((r + m) * 255.f),
-    (sf::Uint8)std::round((g + m) * 255.f),
-    (sf::Uint8)std::round((b + m) * 255.f));
-}
 
 MenuState::MenuState(StateMachine& sm, sf::RenderWindow& win, Config& cfg, Resources& res)
     : sm_(sm), win_(win), cfg_(cfg), res_(res) 
@@ -81,7 +62,7 @@ void MenuState::update(float dt)
 {
     titleHue_ += titleHueSpeed_ * dt;
     if (titleHue_ >= 360.f) titleHue_ -= 360.f;
-    titleText_.setFillColor(hsv(titleHue_, 1.f, 1.f));
+    titleText_.setFillColor(gfx::hsv(titleHue_, 1.f, 1.f));
 }
 
 static const char* difficultyName(Difficulty d)
@@ -127,21 +108,8 @@ void MenuState::draw(sf::RenderTarget& rt)
 
     sf::Text d; d.setFont(res_.font()); d.setCharacterSize(18);
     d.setPosition(60.f, 40.f);
-    d.setString("Your Difficulty: " + std::to_string((int)cfg_.difficulty));
+    d.setString("Your Difficulty: " + std::string(difficultyName(cfg_.difficulty)));
     rt.draw(d);
 
     rt.setView(prev);
-}
-
-void MenuState::startGame() 
-{
-    // change current state for game
-    sm_.push(std::make_unique<class PlayState>(sm_, win_, cfg_, res_));
-}
-
-void MenuState::changeDifficulty() 
-{
-    int cur = (int)cfg_.difficulty;
-    cur = (cur % 5) + 1;
-    cfg_.difficulty = (Difficulty)cur;
 }

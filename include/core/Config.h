@@ -3,11 +3,22 @@
 #include <unordered_map>
 #include <string>
 
-class Config 
+enum class Difficulty { D1 = 1, D2, D3, D4, D5 };
+
+struct DifficultyParams
+{
+    float stepSec;
+    int   pointsPerApple;
+    int   growthPerApple;
+};
+
+class Config
 {
 public:
     Config();
     float windowScale = 1.5f;
+    bool  vsync = true;
+    int   frameLimit = 0;
     // globals
     float startDelaySec = 0.8f; // T
     int   popupRowsX = 5;       // X
@@ -22,7 +33,10 @@ public:
     bool loadUserSettings(const std::string& path);
     bool saveUserSettings(const std::string& path) const;
 
-    struct AppleParams 
+    Difficulty difficulty = Difficulty::D1;
+    DifficultyParams paramsFor(Difficulty d) const;
+
+    struct AppleParams
     {
         // spawn weights
         int   wNormal = 70;
@@ -46,12 +60,8 @@ public:
 
     AppleParams apple;
 
-    Difficulty difficulty = Difficulty::D1;
-
-    DifficultyParams paramsFor(Difficulty d) const;
-
     // EPH: Ephemeral obstacles settings (temporary walls)
-    struct Ephemeral 
+    struct Ephemeral
     {
         bool  enabled = false;
         float visibleSec = 2.0f;

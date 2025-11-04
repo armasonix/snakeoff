@@ -10,9 +10,9 @@ SettingsState::SettingsState(StateMachine& sm, sf::RenderWindow& win, Config& cf
 
     items_ = 
     {
-    {"Sound",  &cfg_.soundOn},
-    {"Music",&cfg_.musicOn},
-    {"Eph obstacles", &cfg_.ephemeralObstacles}
+        {"Sound",& cfg_.soundOn},
+        {"Music",& cfg_.musicOn},
+        {"Obstacles",& cfg_.ephemeralObstacles}
     };
 }
 
@@ -39,12 +39,6 @@ void SettingsState::toggleCurrent()
         break;
     }
     cfg_.saveUserSettings("data/settings.cfg");
-}
-
-// EPH:
-std::string SettingsState::ephLabel() const 
-{
-    return std::string("Ephemeral obstacle: ") + (cfg_.eph.enabled ? "ON" : "OFF");
 }
 
 void SettingsState::handleEvent(const sf::Event& e) 

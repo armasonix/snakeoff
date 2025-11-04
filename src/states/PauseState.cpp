@@ -24,27 +24,17 @@ void PauseState::handleEvent(const sf::Event& e)
     {
         switch (e.key.code) 
         {
-        case sf::Keyboard::P:
-        case sf::Keyboard::B:
-            res_.resumeMusic();
-            sfxHit_.play();
-            sm_.pop();
-            return;
-        case sf::Keyboard::Escape:
-            res_.resumeMusic();
-            sfxHit_.play();
-            sm_.pop();
-            return;
-        case sf::Keyboard::Enter:
-            res_.resumeMusic();
-            sfxHit_.play();
-            sm_.pop();
-            return;
-        case sf::Keyboard::H:
-            showHelp_ = !showHelp_;
-            sfxMove_.play();
-            return;
-        default: break;
+            case sf::Keyboard::P:
+            case sf::Keyboard::B:
+            case sf::Keyboard::Escape:
+            case sf::Keyboard::Enter:
+            {
+                res_.resumeMusic();
+                sfxHit_.play();
+                sm_.pop();
+                return;
+            }
+            default: break;
         }
     }
     return;

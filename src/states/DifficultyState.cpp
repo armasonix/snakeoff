@@ -47,7 +47,7 @@ void DifficultyState::handleEvent(const sf::Event& e)
         }
         else if (e.key.code == sf::Keyboard::Enter)
         {
-            cfg_.difficulty = (Difficulty)selected_;
+            cfg_.difficulty = items_[selected_].d;
             sm_.push(std::make_unique<PlayState>(sm_, win_, cfg_, res_));
             sfxHit_.play();
         }

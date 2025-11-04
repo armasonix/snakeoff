@@ -1,8 +1,11 @@
 #pragma once
 #include "entities/Entity.h"
 #include "util/Types.h"
+#include <algorithm> 
 #include <deque>
 #include <optional>
+
+enum class Direction { Up, Down, Left, Right };
 
 class Snake : public IUpdatable, public IRenderable 
 {

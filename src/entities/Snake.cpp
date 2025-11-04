@@ -1,5 +1,7 @@
 #include "entities/Snake.h"
 #include <SFML/Graphics.hpp>
+#include <algorithm>
+#include <cmath>
 
 Snake::Snake(const Vec2i& startCell) 
 {

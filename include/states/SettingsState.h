@@ -21,9 +21,6 @@ private:
     enum Sel { Sound = 0, Music = 1, Eph = 2, Count = 3 };
     int selected_ = 0;
 
-    int ephemIdx_ = -1;
-    std::string ephemTitle() const;
-
     struct Item 
     {
         const char* label;
@@ -40,7 +37,4 @@ private:
 
     sf::Sound sfxMove_;
     sf::Sound sfxHit_;
-
-    // EPH:
-    std::string ephLabel() const;
 };

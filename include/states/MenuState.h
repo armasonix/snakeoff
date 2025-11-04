@@ -21,8 +21,6 @@ private:
     Resources& res_;
     int             selected_{ 0 };
     std::vector<std::string> items_{ "Start Game","Difficulty","Highlights","Settings","Quit" };
-    void startGame();
-    void changeDifficulty();
 
     sf::Sound sfxMove_;
     sf::Sound sfxHit_;

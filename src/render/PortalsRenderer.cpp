@@ -32,6 +32,7 @@ namespace render
         gp.haloScale = haloScale;
         gp.time = 0.0f;
         drawPortals(rt, cfg, res, portals, portalAnim, glow, glowReady, gp, stats);
+        (void)glowPulseHz; // for future usage, not using now
     }
 
     void drawPortals(sf::RenderTarget& rt,

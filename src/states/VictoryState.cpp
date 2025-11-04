@@ -111,6 +111,7 @@ void VictoryState::draw(sf::RenderTarget& rt)
 {
     auto prev = rt.getView();
     rt.setView(rt.getDefaultView());
+    dim_.setSize(rt.getView().getSize());
 
     const sf::Vector2f center = win_.getView().getCenter();
     panel_.setPosition(center);
