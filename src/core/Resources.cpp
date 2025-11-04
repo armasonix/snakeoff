@@ -4,11 +4,11 @@
 
 namespace fs = std::filesystem;
 
-static bool ensureExists(const std::string& path, const char* kind)
+static bool ensureExists(const fs::path& path, const char* kind)
 {
     if (!fs::exists(path))
     {
-        std::cerr << "[RES] Missing " << kind << ": " << path << "\n"
+        std::cerr << "[RES] Missing " << kind << ": " << path.string() << "\n"
             << "      cwd: " << fs::current_path().string() << "\n";
         return false;
     }
@@ -114,91 +114,73 @@ sf::Music* Resources::music()
 
 bool Resources::load(const std::string& assetsDir)
 {
-    font_ = std::make_unique<sf::Font>();
-    eat_ = std::make_unique<sf::SoundBuffer>();
-    death_ = std::make_unique<sf::SoundBuffer>();
-    win_ = std::make_unique<sf::SoundBuffer>();
-    bonus_ = std::make_unique<sf::SoundBuffer>();
-    break_ = std::make_unique<sf::SoundBuffer>();
-    portal_ = std::make_unique<sf::SoundBuffer>();
-    sfxUiHitBuf_ = std::make_unique<sf::SoundBuffer>();
-    sfxUiMoveBuf_ = std::make_unique<sf::SoundBuffer>();
-
-    const std::string fontPath = assetsDir + "/fonts/Roboto-Regular.ttf";
-    const std::string eatPath = assetsDir + "/sfx/apple.wav";
-    const std::string losePath = assetsDir + "/sfx/lose.wav";
-    const std::string winPath = assetsDir + "/sfx/win.wav";
-    const std::string bonusPath = assetsDir + "/sfx/bonus.wav";
-    const std::string breakPath = assetsDir + "/sfx/break.wav";
-    const std::string portalPath = assetsDir + "/sfx/portal.wav";
-    const std::string sfxuihitPath = assetsDir + "/sfx/menu_select.wav";
-    const std::string sfxuimovePath = assetsDir + "/sfx/hit.wav";
+    const fs::path root = fs::path(assetsDir);
+    const fs::path fontPath = root / "fonts/Roboto-Regular.ttf";
+    const fs::path eatPath = root / "sfx/apple.wav";
+    const fs::path losePath = root / "sfx/lose.wav";
+    const fs::path winPath = root / "sfx/win.wav";
+    const fs::path bonusPath = root / "sfx/bonus.wav";
+    const fs::path breakPath = root / "sfx/break.wav";
+    const fs::path portalPath = root / "sfx/portal.wav";
+    const fs::path sfxuihitPath = root / "sfx/menu_select.wav";
+    const fs::path sfxuimovePath = root / "sfx/hit.wav";
 
     bool ok = true;
-
-    const std::string G = assetsDir + "/tex/";
-
-    ok &= ensureExists(fontPath, "font");
-    ok &= ensureExists(eatPath, "sound");
-    ok &= ensureExists(losePath, "sound");
-    ok &= ensureExists(winPath, "sound");
-    ok &= ensureExists(bonusPath, "sound");
-    ok &= ensureExists(breakPath, "sound");
-    ok &= ensureExists(portalPath, "sound");
-    ok &= ensureExists(sfxuihitPath, "sound");
-    ok &= ensureExists(sfxuimovePath, "sound");
-    if (!ok)
+    struct Need { fs::path p; const char* kind; };
+    const Need needed[] = 
     {
-        std::cerr << "[RES] One or more asset files are missing. "
-            "Fix paths or copy assets next to the executable.\n";
+        { fontPath,     "font"  },
+        { eatPath,      "sound" },
+        { losePath,     "sound" },
+        { winPath,      "sound" },
+        { bonusPath,    "sound" },
+        { breakPath,    "sound" },
+        { portalPath,   "sound" },
+        { sfxuihitPath, "sound" },
+        { sfxuimovePath,"sound" },
+    };
+
+    for (const auto& n : needed)
+        ok &= ensureExists(n.p, n.kind);
+
+    if (!ok) 
+    {
+        std::cerr << "[RES] One or more asset files are missing. Fix paths or copy assets next to the executable.\n";
         return false;
     }
+    const fs::path G = root / "tex";
 
-    if (!font_->loadFromFile(fontPath))
+    auto loadFont = [&](std::unique_ptr<sf::Font>& dst, const fs::path& p)
     {
-        std::cerr << "[RES] SFML failed to load font: " << fontPath << "\n";
-        ok = false;
-    }
-    if (!eat_->loadFromFile(eatPath))
+        if (!dst) dst.reset(new sf::Font());
+        if (!dst->loadFromFile(p.string()))
+        {
+            std::cerr << "[RES] SFML failed to load font: " << p.string() << "\n";
+            ok = false;
+        }
+    };
+
+    bool sfxOk = true;
+    auto loadBufTracked = [&](std::unique_ptr<sf::SoundBuffer>& dst, const fs::path& p)
     {
-        std::cerr << "[RES] SFML failed to load sound: " << eatPath << "\n";
-        ok = false;
-    }
-    if (!death_->loadFromFile(losePath))
-    {
-        std::cerr << "[RES] SFML failed to load sound: " << losePath << "\n";
-        ok = false;
-    }
-    if (!win_->loadFromFile(winPath))
-    {
-        std::cerr << "[RES] SFML failed to load sound: " << winPath << "\n";
-        ok = false;
-    }
-    if (!bonus_->loadFromFile(bonusPath))
-    {
-        std::cerr << "[RES] SFML failed to load sound: " << bonusPath << "\n";
-        ok = false;
-    }
-    if (!break_->loadFromFile(breakPath))
-    {
-        std::cerr << "[RES] SFML failed to load sound: " << breakPath << "\n";
-        ok = false;
-    }
-    if (!portal_->loadFromFile(portalPath))
-    {
-        std::cerr << "[RES] SFML failed to load sound: " << portalPath << "\n";
-        ok = false;
-    }
-    if (!sfxUiHitBuf_->loadFromFile(sfxuihitPath))
-    {
-        std::cerr << "[RES] SFML failed to load sound: " << sfxuihitPath << "\n";
-        ok = false;
-    }
-    if (!sfxUiMoveBuf_->loadFromFile(sfxuimovePath))
-    {
-        std::cerr << "[RES] SFML failed to load sound: " << sfxuimovePath << "\n";
-        ok = false;
-    }
+        if (!dst) dst.reset(new sf::SoundBuffer());
+        if (!dst->loadFromFile(p.string()))
+        {
+            std::cerr << "[RES] SFML failed to load sound: " << p.string() << "\n";
+            ok = false;
+            sfxOk = false;
+        }
+    };
+
+    loadFont(font_, fontPath);
+    loadBufTracked(eat_, eatPath);
+    loadBufTracked(death_, losePath);
+    loadBufTracked(win_, winPath);
+    loadBufTracked(bonus_, bonusPath);
+    loadBufTracked(break_, breakPath);
+    loadBufTracked(portal_, portalPath);
+    loadBufTracked(sfxUiHitBuf_, sfxuihitPath);
+    loadBufTracked(sfxUiMoveBuf_, sfxuimovePath);
 
     if (!ok)
     {
@@ -206,63 +188,63 @@ bool Resources::load(const std::string& assetsDir)
             "Will still try to load textures…\n";
     }
 
-    auto loadTex = [&](std::unique_ptr<sf::Texture>& t, const std::string& path)
-        {
-            t.reset(new sf::Texture());
-            t->setSmooth(true);
-            if (!t->loadFromFile(path))
-            {
-                std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
-                ok = false;
-            }
-        };
-
-    auto loadTexRaw = [&](sf::Texture& t, const std::string& name)
-        {
-            const std::string path = G + name;
-            t.setSmooth(true);
-            if (!t.loadFromFile(path))
-            {
-                std::cerr << "[RES] SFML failed to load texture: " << path << "\n";
-                ok = false;
-            }
-        };
-
-    loadTex(txSnakeHead_, G + "sHead.png");
-    loadTex(txSnakeBody_, G + "sBody.png");
-    loadTex(txSnakeTail_, G + "sTail.png");
-    // corners
-    loadTex(txBodyC1_, G + "sBodyC1.png");
-    loadTex(txBodyC2_, G + "sBodyC2.png");
-    loadTex(txBodyC3_, G + "sBodyC3.png");
-    loadTex(txBodyC4_, G + "sBodyC4.png");
-
-    loadTex(txApple1_, G + "apple.png");
-    loadTex(txApple2_, G + "apple2.png");
-    loadTex(txApple3_, G + "apple3.png");
-    loadTex(txPowerBomb_, G + "bomb.png");
-    loadTex(txPowerMush_, G + "mush.png");
-    loadTex(txExplosion_, G + "expl.png");
-    loadTex(txGround_, G + "ground.png");
-    loadTex(txWall_, G + "wall.png");
-    loadTex(txObstacle_, G + "obs.png");
-    if (txGround_)
+    auto loadTex = [&](std::unique_ptr<sf::Texture>& t, const fs::path& p)
     {
-        txGround_->setSmooth(false);
-        txGround_->setRepeated(true);
+        t.reset(new sf::Texture());
+        t->setSmooth(true);
+        if (!t->loadFromFile(p.string()))
+        {
+            std::cerr << "[RES] SFML failed to load texture: " << p.string() << "\n";
+            ok = false;
+        }
+    };
+
+    auto loadTexRaw = [&](sf::Texture& t, const fs::path& p)
+    {
+        t.setSmooth(true);
+        if (!t.loadFromFile(p.string()))
+        {
+            std::cerr << "[RES] SFML failed to load texture: " << p.string() << "\n";
+            ok = false;
+        }
+    };
+
+    struct TexDef { std::unique_ptr<sf::Texture>* slot; const char* file; bool noSmooth = false; bool repeated = false; };
+    const TexDef texList[] = 
+    {
+        { &txSnakeHead_,  "sHead.png"   },
+        { &txSnakeBody_,  "sBody.png"   },
+        { &txSnakeTail_,  "sTail.png"   },
+        { &txBodyC1_,     "sBodyC1.png" },
+        { &txBodyC2_,     "sBodyC2.png" },
+        { &txBodyC3_,     "sBodyC3.png" },
+        { &txBodyC4_,     "sBodyC4.png" },
+        { &txApple1_,     "apple.png"   },
+        { &txApple2_,     "apple2.png"  },
+        { &txApple3_,     "apple3.png"  },
+        { &txPowerBomb_,  "bomb.png"    },
+        { &txPowerMush_,  "mush.png"    },
+        { &txExplosion_,  "expl.png"    },
+        { &txGround_,     "ground.png",  true,  true },
+        { &txWall_,       "wall.png",    true,  false },
+        { &txObstacle_,   "obs.png",     true,  false },
+    };
+        for (const auto& td : texList)
+    {
+        loadTex(*td.slot, G / td.file);
+        if (td.noSmooth) (*td.slot)->setSmooth(false);
+        if (td.repeated) (*td.slot)->setRepeated(true);
     }
 
     {
-        const char* names[8] =
-        {
-            "prtl1.png","prtl2.png","prtl3.png","prtl4.png",
-            "prtl5.png","prtl6.png","prtl7.png","prtl8.png"
-        };
+        const char* names[8] = 
+        { "prtl1.png","prtl2.png","prtl3.png","prtl4.png",
+        "prtl5.png","prtl6.png","prtl7.png","prtl8.png" };
         for (size_t i = 0; i < 8; ++i)
-            loadTexRaw(txPortal_[i], names[i]);
+        loadTexRaw(txPortal_[i], G / names[i]);
     }
 
-    soundOn_ = true;
+    soundOn_ = sfxOk;
     return ok;
 }
 
