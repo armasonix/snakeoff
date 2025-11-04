@@ -1,13 +1,14 @@
+#include "states/PlayContext.h"
+#include "core/Config.h"
 #include "entities/apples/NormalApple.h"
-#include "states/PlayState.h"
 #include "systems/Score.h"
 #include "entities/Snake.h"
 
-void NormalApple::onEaten(PlayContext& ctx) 
+void NormalApple::onEaten(PlayContext& ctx)
 {
-    const auto params = ctx.config.paramsFor(ctx.config.difficulty);
+    const auto params = ctx.cfg.paramsFor(ctx.cfg.difficulty);
     ctx.score.add(params.pointsPerApple);
     ctx.snake.grow(params.growthPerApple);
-    ctx.flashSnake();
+    if (ctx.flash) ctx.flash();
     ctx.sfxEat.play();
 }

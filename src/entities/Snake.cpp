@@ -1,5 +1,7 @@
 #include "entities/Snake.h"
 #include <SFML/Graphics.hpp>
+#include <algorithm>
+#include <cmath>
 
 Snake::Snake(const Vec2i& startCell) 
 {
@@ -32,6 +34,12 @@ void Snake::step()
     body_.push_front(newHead);
     if (growth_ > 0) --growth_;
     else body_.pop_back();
+}
+
+void Snake::teleportHead(const Vec2i& cell)
+{
+    if (body_.empty()) return;
+    body_[0] = cell;
 }
 
 void Snake::update(float dt) 

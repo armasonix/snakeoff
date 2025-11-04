@@ -1,10 +1,24 @@
 #pragma once
 #include "util/Types.h"
 #include <unordered_map>
+#include <string>
 
-class Config 
+enum class Difficulty { D1 = 1, D2, D3, D4, D5 };
+
+struct DifficultyParams
+{
+    float stepSec;
+    int   pointsPerApple;
+    int   growthPerApple;
+};
+
+class Config
 {
 public:
+    Config();
+    float windowScale = 1.5f;
+    bool  vsync = true;
+    int   frameLimit = 0;
     // globals
     float startDelaySec = 0.8f; // T
     int   popupRowsX = 5;       // X
@@ -16,7 +30,45 @@ public:
     bool  soundOn = true;
     bool  musicOn = true;
 
-    Difficulty difficulty = Difficulty::D1;
+    bool loadUserSettings(const std::string& path);
+    bool saveUserSettings(const std::string& path) const;
 
+    Difficulty difficulty = Difficulty::D1;
     DifficultyParams paramsFor(Difficulty d) const;
+
+    struct AppleParams
+    {
+        // spawn weights
+        int   wNormal = 70;
+        int   wBonus = 15;
+        int   wPoison = 10;
+        int   wConfuse = 5;
+
+        // bonus: score multi
+        float bonusScoreMul = 2.0f;   // J+P*mul
+        float bonusTTL = 6.0f;
+
+        // poison: acceleration
+        float poisonSpeedMul = 1.5f;   // speed multi
+        float poisonDuration = 5.0f;
+        float poisonTTL = 8.0f;
+
+        // confuse: control inverse
+        float confuseDuration = 4.0f;
+        float confuseTTL = 8.0f;
+    };
+
+    AppleParams apple;
+
+    // EPH: Ephemeral obstacles settings (temporary walls)
+    struct Ephemeral
+    {
+        bool  enabled = false;
+        float visibleSec = 2.0f;
+        float hiddenSec = 1.0f;
+    } eph;
+
+    bool  ephemeralObstacles = false;
+    float ephemeralOnSec = 4.f;
+    float ephemeralOffSec = 4.f;
 };

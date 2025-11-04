@@ -1,0 +1,174 @@
+{
+	"globsDependent" : 
+	[
+		{
+			"expression" : "E:/SnakeOff/SnakeOff/src/*.cpp",
+			"paths" : 
+			[
+				"E:/SnakeOff/SnakeOff/src/audio/SoundBus.cpp",
+				"E:/SnakeOff/SnakeOff/src/core/Application.cpp",
+				"E:/SnakeOff/SnakeOff/src/core/Config.cpp",
+				"E:/SnakeOff/SnakeOff/src/core/Resources.cpp",
+				"E:/SnakeOff/SnakeOff/src/core/StateMachine.cpp",
+				"E:/SnakeOff/SnakeOff/src/entities/Apple.cpp",
+				"E:/SnakeOff/SnakeOff/src/entities/Powerup.cpp",
+				"E:/SnakeOff/SnakeOff/src/entities/Snake.cpp",
+				"E:/SnakeOff/SnakeOff/src/entities/apples/NormalApple.cpp",
+				"E:/SnakeOff/SnakeOff/src/gfx/Composite.cpp",
+				"E:/SnakeOff/SnakeOff/src/main.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/DebugOverlay.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/ExplosionsRenderer.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/GridBatch.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/GridRenderer.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/ItemsRenderer.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/PortalsRenderer.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/SnakeRenderer.cpp",
+				"E:/SnakeOff/SnakeOff/src/render/UIRenderer.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/DifficultyState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/GameOverState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/HighScoresState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/MenuState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/PauseState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/PlayState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/SettingsState.cpp",
+				"E:/SnakeOff/SnakeOff/src/states/VictoryState.cpp",
+				"E:/SnakeOff/SnakeOff/src/systems/HighScores.cpp",
+				"E:/SnakeOff/SnakeOff/src/systems/Spawner.cpp",
+				"E:/SnakeOff/SnakeOff/src/ui/HUD.cpp",
+				"E:/SnakeOff/SnakeOff/src/util/Random.cpp",
+				"E:/SnakeOff/SnakeOff/src/vfx/CameraShake.cpp",
+				"E:/SnakeOff/SnakeOff/src/world/Grid.cpp",
+				"E:/SnakeOff/SnakeOff/src/world/Level.cpp",
+				"E:/SnakeOff/SnakeOff/src/world/ProcGen.cpp"
+			],
+			"recurse" : true
+		}
+	],
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "out/build/x64-Debug/CMakeFiles/3.30.5-msvc23/CMakeSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Platform/Windows-Initialize.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "out/build/x64-Debug/CMakeFiles/3.30.5-msvc23/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Platform/Windows.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Platform/WindowsPaths.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeCXXInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Compiler/MSVC-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Compiler/MSVC.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Platform/Windows-MSVC-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/Platform/Windows-MSVC.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "out/build/x64-Debug/CMakeFiles/3.30.5-msvc23/CMakeRCCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeRCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.30/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"path" : "lib/SFML/lib/cmake/SFML/SFMLConfigVersion.cmake"
+		},
+		{
+			"path" : "lib/SFML/lib/cmake/SFML/SFMLConfig.cmake"
+		},
+		{
+			"path" : "lib/SFML/lib/cmake/SFML/SFMLSharedTargets.cmake"
+		},
+		{
+			"path" : "lib/SFML/lib/cmake/SFML/SFMLSharedTargets-debug.cmake"
+		},
+		{
+			"path" : "lib/SFML/lib/cmake/SFML/SFMLSharedTargets-release.cmake"
+		},
+		{
+			"path" : "lib/SFML/lib/cmake/SFML/SFMLConfigDependencies.cmake"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "E:/SnakeOff/SnakeOff/out/build/x64-Debug",
+		"source" : "E:/SnakeOff/SnakeOff"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 1
+	}
+}

@@ -5,11 +5,7 @@
 Level Level::loadFromFile(const std::string& /*path*/, int w, int h)
 {
     Grid g(w, h);
-
-    for (int y = 0; y < h; ++y)
-        for (int x = 0; x < w; ++x)
-            g.set({ x, y }, CellType::Empty);
-
+    g.fill(CellType::Empty);
     return Level(std::move(g));
 }
 
@@ -24,9 +20,7 @@ bool Level::isBlocked(int x, int y) const noexcept
 
 void Level::clear()
 {
-    for (int y = 0; y < rows(); ++y)
-        for (int x = 0; x < cols(); ++x)
-            grid_.set({ x, y }, CellType::Empty);
+    grid_.fill(CellType::Empty);
 }
 
 void Level::setCell(int x, int y, Cell c)
@@ -36,24 +30,12 @@ void Level::setCell(int x, int y, Cell c)
 
 void Level::buildBorders()
 {
-
-    for (int x = 0; x < cols(); ++x) 
-    {
-        setCell(x, 0, Cell::Solid);
-        setCell(x, rows() - 1, Cell::Solid);
-    }
-
-    for (int y = 0; y < rows(); ++y) 
-    {
-        setCell(0, y, Cell::Solid);
-        setCell(cols() - 1, y, Cell::Solid);
-    }
+    grid_.buildBorders();
 }
 
 void Level::applyObstacles(const std::vector<sf::Vector2i>& blocks)
 {
-
-    for (auto& c : blocks) 
+    for (auto& c : blocks)
     {
         if (c.x <= 0 || c.y <= 0 || c.x >= cols() - 1 || c.y >= rows() - 1) continue;
         setCell(c.x, c.y, Cell::Solid);

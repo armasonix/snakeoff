@@ -183,6 +183,15 @@ SFML_DIR:PATH=E:/SnakeOff/SnakeOff/lib/SFML/lib/cmake/SFML
 //Path to a file.
 SFML_DOC_DIR:PATH=SFML_DOC_DIR-NOTFOUND
 
+//Enable link-time optimization in Release
+SNAKEOFF_LTO:BOOL=OFF
+
+//Enable Unity/jumbo builds for faster compilation
+SNAKEOFF_UNITY:BOOL=OFF
+
+//Treat project warnings as errors
+SNAKEOFF_WERROR:BOOL=OFF
+
 //Value Computed by CMake
 SnakeOff_BINARY_DIR:STATIC=E:/SnakeOff/SnakeOff/out/build/x64-Debug
 

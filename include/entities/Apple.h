@@ -1,7 +1,6 @@
 #pragma once
 #include "entities/Entity.h"
 #include "util/Types.h"
-#include <SFML/Graphics.hpp>
 
 struct PlayContext;
 
@@ -15,8 +14,8 @@ public:
 
     virtual void onEaten(PlayContext& ctx) = 0;
 
-    // render
-    void draw(sf::RenderTarget& rt) const override;
+    [[deprecated("render moved to ItemsRenderer; this method draws nothing")]]
+    void draw(sf::RenderTarget & rt) const override;
 
 protected:
     Vec2i cell_;

@@ -4,6 +4,7 @@
 #include "core/Resources.h"
 #include "systems/HighScores.h"
 #include <string>
+#include <SFML/Audio.hpp>
 
 class GameOverState : public IGameState 
 {
@@ -13,7 +14,7 @@ public:
 
     void onEnter() override;
     void handleEvent(const sf::Event& e) override;
-    void update(float) override {}
+    void update(float dt) override;
     void draw(sf::RenderTarget& rt) override;
 
 private:
@@ -38,4 +39,10 @@ private:
     int optSel_{ 0 }; // 0=start, 1=to main menu
 
     Phase phase_{ Phase::AskSave };
+
+    sf::Sound sfxMove_;
+    sf::Sound sfxHit_;
+
+    float titleHue_{ 0.f };
+    float titleHueSpeed_{ 60.f };
 };
