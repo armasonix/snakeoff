@@ -1,5 +1,6 @@
 #include "render/ItemsRenderer.h"
 #include "render/SpriteRefs.h"
+#include "render/RenderStats.h"
 #include "core/Config.h"
 #include "entities/Apple.h"
 #include <algorithm>
@@ -39,12 +40,13 @@ namespace
 namespace render
 {
     void drawItems(sf::RenderTarget& world,
-        const Config& cfg,
-        const Apple* apple,
+        const Config & cfg,
+        const Apple * apple,
         AppleKind    kind,
         float        appleTTL,
-        const std::vector<PowerUp>& powerups,
-        const SpriteRefs& sref)
+        const std::vector<PowerUp>&powerups,
+        const SpriteRefs & sref,
+        render::RenderStats * stats)
     {
         // apple
         if (apple)
@@ -63,6 +65,8 @@ namespace render
             s->setRotation(0.f);
             s->setPosition(pos);
             world.draw(*s);
+            if (sref.apple1.getTexture()) { /* noop */ }
+            if (stats) stats->addDraws();
 
             // ttl bar
             const float ttlTotal = ttlTotalFor(cfg, kind);
@@ -87,6 +91,7 @@ namespace render
             s->setRotation(0.f);
             s->setPosition(pos);
             world.draw(*s);
+            if (stats) stats->addDraws();
         }
     }
 }

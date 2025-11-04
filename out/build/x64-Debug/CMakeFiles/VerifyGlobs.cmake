@@ -5,6 +5,7 @@ cmake_policy(SET CMP0009 NEW)
 # SOURCES at CMakeLists.txt:14 (file)
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "E:/SnakeOff/SnakeOff/src/*.cpp")
 set(OLD_GLOB
+  "E:/SnakeOff/SnakeOff/src/audio/SoundBus.cpp"
   "E:/SnakeOff/SnakeOff/src/core/Application.cpp"
   "E:/SnakeOff/SnakeOff/src/core/Config.cpp"
   "E:/SnakeOff/SnakeOff/src/core/Resources.cpp"
@@ -13,6 +14,7 @@ set(OLD_GLOB
   "E:/SnakeOff/SnakeOff/src/entities/Powerup.cpp"
   "E:/SnakeOff/SnakeOff/src/entities/Snake.cpp"
   "E:/SnakeOff/SnakeOff/src/entities/apples/NormalApple.cpp"
+  "E:/SnakeOff/SnakeOff/src/gfx/Composite.cpp"
   "E:/SnakeOff/SnakeOff/src/main.cpp"
   "E:/SnakeOff/SnakeOff/src/render/DebugOverlay.cpp"
   "E:/SnakeOff/SnakeOff/src/render/ExplosionsRenderer.cpp"

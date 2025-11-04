@@ -1,14 +1,16 @@
 #include "render/ExplosionsRenderer.h"
+#include "render/RenderStats.h"
 #include <algorithm>
 #include <cmath>
 
 namespace render
 {
     void drawExplosions(sf::RenderTarget& world,
-        const sf::Sprite& sprExpl,
-        const std::vector<sf::Vector2f>& positions,
-        const std::vector<float>& times,
-        float lifeSeconds)
+        const sf::Sprite & sprExpl,
+        const std::vector<sf::Vector2f>&positions,
+        const std::vector<float>&times,
+        float lifeSeconds,
+        render::RenderStats * stats)
     {
         const sf::Texture* tx = sprExpl.getTexture();
         if (!tx) return;
@@ -63,5 +65,6 @@ namespace render
         rs.blendMode = sf::BlendAdd;
 
         world.draw(va, rs);
+        if (stats) { stats->addDraws(); stats->addQuads(static_cast<int>(va.getVertexCount() / 4)); }
     }
 }

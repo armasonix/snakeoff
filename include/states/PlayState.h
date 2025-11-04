@@ -3,6 +3,7 @@
 #include "core/Config.h"
 #include "core/Input.h"
 #include "core/Resources.h"
+#include "audio/SoundBus.h"
 #include "world/Level.h"
 #include "entities/Snake.h"
 #include "entities/Apple.h"
@@ -78,6 +79,11 @@ private:
     render::GridBatch gridBatch_;
     // metrics ms draw()
     float tBgMs_ = 0.f, tGridMs_ = 0.f, tPortalsMs_ = 0.f, tSnakeMs_ = 0.f, tUIMs_ = 0.f;
+    int drawsPortals_ = 0;
+    int drawsItems_ = 0;
+    int drawsSnake_ = 0;
+    int drawsExplos_ = 0;
+    int drawsGate_ = 0;
 
     // screen-space overlays
     void drawConfuseOverlay_(sf::RenderTarget& rt, const sf::View& worldView);
@@ -191,6 +197,9 @@ private:
         return snakeOcc_[occIndex_(x, y)] != 0;
     
     }
+
+    // audio bus for sfx
+    audio::SoundBus sfxBus_;
 
     // Scratch buffer
     std::vector<sf::Vector2f> expPosScratch_;

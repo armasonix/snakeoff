@@ -1,4 +1,5 @@
 #include "render/SnakeRenderer.h"
+#include "render/RenderStats.h"
 #include "render/SpriteRefs.h"
 #include "entities/Snake.h"
 #include <cmath>
@@ -65,12 +66,14 @@ namespace
 namespace render
 {
     void drawSnakeBatched(sf::RenderTarget& world,
-        const Snake& snake,
+        const Snake & snake,
         int cellPx,
-        const SpriteRefs& sref)
+        const SpriteRefs & sref,
+        render::RenderStats * stats)
     {
         const auto& body = snake.body();
         if (body.empty()) return;
+        int draws = 0;
 
         // head
         {
@@ -88,6 +91,7 @@ namespace render
             sref.head.setRotation(rot);
             sref.head.setPosition(cellCenter(h.x, h.y, cellPx));
             world.draw(sref.head);
+            ++draws;
         }
 
         // body and corners
@@ -156,11 +160,17 @@ namespace render
             sref.tail.setPosition(cellCenter(t.x, t.y, cellPx));
             world.draw(sref.tail);
             sref.tail.setScale(base);
+            ++draws;
         }
 
         // flush
-        bodyH.flush(world);
-        bodyV.flush(world);
-        for (int i = 0;i < 4;++i) corner[i].flush(world);
+        auto tryFlush = [&](QuadWriter& w)
+        {
+            if (w.va.getVertexCount() > 0) { w.flush(world); ++draws; }
+        };
+        tryFlush(bodyH);
+        tryFlush(bodyV);
+        for (int i = 0; i < 4; ++i) tryFlush(corner[i]);
+        if (stats) stats->addDraws(draws);
     }
 }

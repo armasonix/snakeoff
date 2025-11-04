@@ -11,6 +11,7 @@
 #include "render/ExplosionsRenderer.h"
 #include "render/UIRenderer.h"
 #include "render/GridBatch.h"
+#include "render/RenderStats.h"
 #include "render/ItemsRenderer.h"
 #include "render/DebugOverlay.h"
 #include "render/BackgroundRenderer.h"
@@ -880,7 +881,6 @@ void PlayState::draw(sf::RenderTarget& rt)
     }
 
     // render pass pipeline
-    // --- RenderPass pipeline (WORLD) ---
     struct Pass 
     {
         const char* name;
@@ -889,7 +889,7 @@ void PlayState::draw(sf::RenderTarget& rt)
     };
     
         Pass pipeline[] = 
-        {
+        { // portals
             {"portals",
             rr_.portals,
             [&](sf::RenderTarget& w) 
@@ -898,17 +898,21 @@ void PlayState::draw(sf::RenderTarget& rt)
                 gfx::GlowParams gp;
                 gp.strength = portalGlowStrength_;
                 gp.haloScale = portalHaloScale_;
+                render::RenderStats rs;
                 render::drawPortals(w, cfg_, res_, portals_, portalAnim_,
-                &portalGlow_, portalGlowReady_, gp);
+                &portalGlow_, portalGlowReady_, gp, &rs);
+                drawsPortals_ = rs.draws;
             }
          },
             {"items",
             rr_.items,
             [&](sf::RenderTarget& w) 
             {
+                render::RenderStats rs;
                 render::drawItems(w, cfg_, apple_.get(),
                 static_cast<render::AppleKind>(static_cast<int>(appleKind_)),
-                appleTTL_, powerups_, sref);
+                appleTTL_, powerups_, sref, &rs);
+                drawsItems_ = rs.draws;
             }
          },
             {"snake",
@@ -916,7 +920,9 @@ void PlayState::draw(sf::RenderTarget& rt)
             [&](sf::RenderTarget& w) 
             {
                 perf::ScopeTimer _(tSnakeMs_);
-                render::drawSnakeBatched(w, snake_, cfg_.cellPx, sref);
+                render::RenderStats rs;
+                render::drawSnakeBatched(w, snake_, cfg_.cellPx, sref, &rs);
+                drawsSnake_ = rs.draws;
             }
          },
             {"explosions",
@@ -931,7 +937,9 @@ void PlayState::draw(sf::RenderTarget& rt)
                         expPosScratch_.push_back(fx.pos);
                         expTScratch_.push_back(fx.t);
                     }
-                    render::drawExplosions(w, sprExpl_, expPosScratch_, expTScratch_, 0.25f);
+                    render::RenderStats rs;
+                    render::drawExplosions(w, sprExpl_, expPosScratch_, expTScratch_, 0.25f, &rs);
+                    drawsExplos_ = rs.draws;
             }
          },
             {"gate",
@@ -939,6 +947,7 @@ void PlayState::draw(sf::RenderTarget& rt)
             [&](sf::RenderTarget& w) 
             {
                 render::drawGate(w, gateUnlocked_, gateViz_, gatePulse_);
+                drawsGate_ = 1;
             }
          }
      };
